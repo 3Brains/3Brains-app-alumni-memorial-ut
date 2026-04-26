@@ -1941,7 +1941,7 @@ function App() {
         {page === 'search' && (
           <div className="space-y-3" style={{ paddingTop: PT }}>
             <div className="flex flex-col items-center justify-center" style={{ height: PT, marginTop: '-' + PT, paddingTop: '0.5rem', paddingBottom: '0', pointerEvents: 'none' }}>
-              <img src={SKIN.assets.logo} alt={COPY.appName} onError={(e) => { e.target.style.display = 'none'; }} style={{ width: 'auto', height: 'calc(' + PT + ' - 2.5rem)', maxWidth: '95%', objectFit: 'contain', filter: 'drop-shadow(0 6px 24px rgba(124,58,237,0.9)) brightness(2.0)' }} />
+              <img src={SKIN.assets.logo} alt={COPY.appName} onError={(e) => { e.target.style.display = 'none'; }} style={{ width: 'auto', height: 'calc(' + PT + ' - 2.5rem)', maxWidth: '95%', objectFit: 'contain', filter: 'none' }} />
               <p className="text-orange-300 font-bold italic text-center" style={{ fontSize: isPhone ? '1.6rem' : '2.2rem', whiteSpace: 'nowrap', textShadow: '0 2px 8px rgba(0,0,0,0.8)', marginTop: '0.4rem' }}>{COPY.tagline}</p>
               <p className="text-purple-200 text-center" style={{ fontSize: isPhone ? '1.0rem' : '1.2rem', textShadow: '0 1px 4px rgba(0,0,0,0.8)', marginTop: '0.2rem' }}>{COPY.taglineSub}</p>
             </div>
