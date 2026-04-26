@@ -37,26 +37,26 @@
     /* ═══ SKIN-DRIVEN TAILWIND OVERRIDES (Path B) ═══
        Overrides Tailwind's hardcoded color classes with CSS vars
        driven by SKIN.colors. This is what makes reskinning real. */
-    .bg-purple-600   { background-color: var(--primary) !important; }
-    .bg-purple-700   { background-color: var(--primary-hover) !important; }
-    .bg-purple-800   { background-color: var(--primary-dark) !important; }
-    .bg-purple-900   { background-color: var(--primary-deep) !important; }
+    .bg-orange-600   { background-color: var(--primary) !important; }
+    .bg-orange-700   { background-color: var(--primary-hover) !important; }
+    .bg-orange-800   { background-color: var(--primary-dark) !important; }
+    .bg-orange-900   { background-color: var(--primary-deep) !important; }
     .bg-purple-950   { background-color: var(--primary-deepest) !important; }
-    .hover\:bg-purple-700:hover { background-color: var(--primary-hover) !important; }
-    .hover\:bg-purple-800:hover { background-color: var(--primary-dark) !important; }
+    .hover\:bg-orange-700:hover { background-color: var(--primary-hover) !important; }
+    .hover\:bg-orange-800:hover { background-color: var(--primary-dark) !important; }
 
     .text-purple-200 { color: var(--primary-light-2) !important; }
-    .text-purple-300 { color: var(--primary-light-1) !important; }
-    .text-purple-400 { color: var(--primary-accent) !important; }
-    .text-purple-500 { color: var(--primary) !important; }
+    .text-orange-300 { color: var(--primary-light-1) !important; }
+    .text-orange-400 { color: var(--primary-accent) !important; }
+    .text-orange-500 { color: var(--primary) !important; }
 
-    .border-purple-400 { border-color: var(--primary-accent) !important; }
-    .border-purple-600 { border-color: var(--primary) !important; }
-    .border-purple-700 { border-color: var(--primary-hover) !important; }
-    .border-purple-800 { border-color: var(--primary-dark) !important; }
-    .border-purple-900 { border-color: var(--primary-deep) !important; }
+    .border-orange-400 { border-color: var(--primary-accent) !important; }
+    .border-orange-600 { border-color: var(--primary) !important; }
+    .border-orange-700 { border-color: var(--primary-hover) !important; }
+    .border-orange-800 { border-color: var(--primary-dark) !important; }
+    .border-orange-900 { border-color: var(--primary-deep) !important; }
 
-    .focus\:ring-purple-500:focus { --tw-ring-color: var(--primary) !important; }
+    .focus\:ring-orange-500:focus { --tw-ring-color: var(--primary) !important; }
 
     .bg-green-700    { background-color: var(--status-alive) !important; }
     .bg-green-800    { background-color: var(--status-alive-dark) !important; }
@@ -548,7 +548,7 @@ const ClearableInput = ({ value, onChange, onBlur, onKeyPress, placeholder, type
 );
 
 const CardPageHeader = ({ title, subtitle }) => (
-  <div className="mb-3 pb-2 border-b border-purple-900/30 text-center">
+  <div className="mb-3 pb-2 border-b border-orange-900/30 text-center">
     <h2 className="text-4xl font-black text-white tracking-wide">{title}</h2>
     {subtitle && <p className="text-gray-300 text-xl mt-1">{subtitle}</p>}
   </div>
@@ -790,7 +790,7 @@ const Ssdi = {
 const SsdiRecordBlock = ({ r }) => {
   if (!r) return null;
   return (
-    <div className="bg-gray-800/60 rounded-xl p-3 border border-purple-900/30 mb-3">
+    <div className="bg-gray-800/60 rounded-xl p-3 border border-orange-900/30 mb-3">
       <p className="text-white font-bold text-xl mb-1">{r.name}</p>
       {r.middle_name && <p className="text-gray-300 text-xl">{COPY.labelMiddle}: {r.middle_name}</p>}
       {r.birth_date && <p className="text-gray-300 text-xl">{COPY.labelDob}: {r.birth_date}</p>}
@@ -1264,8 +1264,8 @@ function App() {
   };
 
   const unreadCount = notifications.length;
-  const iClass = "w-full px-4 py-3 border border-purple-900/50 rounded-lg focus:ring-2 focus:ring-purple-500 text-xl bg-gray-900/60 text-white placeholder-gray-400";
-  const cardClass = "bg-black/35 rounded-2xl p-4 shadow-lg border border-purple-900/30 backdrop-blur-sm";
+  const iClass = "w-full px-4 py-3 border border-orange-900/50 rounded-lg focus:ring-2 focus:ring-orange-500 text-xl bg-gray-900/60 text-white placeholder-gray-400";
+  const cardClass = "bg-black/35 rounded-2xl p-4 shadow-lg border border-orange-900/30 backdrop-blur-sm";
   const containerClass = (page === 'about') ? 'w-full max-w-3xl mx-auto px-3' : 'w-full px-3';
 
   const SingleProfileCard = ({ profile, showAddButton, onBack }) => {
@@ -1273,7 +1273,7 @@ function App() {
     const alreadyWatching = APP_META.modules.watchlist ? isOnWatchlist(profile.title) : false;
     const isDisambig = profile.isDisambiguation;
     return (
-      <div className="rounded-2xl overflow-hidden border border-purple-800 shadow-lg">
+      <div className="rounded-2xl overflow-hidden border border-orange-800 shadow-lg">
         <div className={'px-5 py-3 text-center ' + (profile.deathDate ? 'bg-gray-800' : isDisambig ? 'bg-yellow-600' : 'bg-green-700')}>
           <p className="text-white font-black text-3xl">{profile.title}</p>
           <p className="text-white/80 text-xl">{profile.deathDate ? COPY.statusPassed : isDisambig ? COPY.statusMultiple : COPY.statusAliveShort}</p>
@@ -1281,12 +1281,12 @@ function App() {
         </div>
         <div className="bg-gray-900/70 p-4">
           <div className="flex gap-3 items-start mb-3">
-            {profile.thumbnail ? <img src={profile.thumbnail} alt={profile.title} className="w-16 h-16 rounded-full object-cover border-2 border-purple-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-purple-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
+            {profile.thumbnail ? <img src={profile.thumbnail} alt={profile.title} className="w-16 h-16 rounded-full object-cover border-2 border-orange-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-orange-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
             <div className="flex-1">
               <h2 className="text-white text-2xl font-bold mb-1">{profile.title}</h2>
-              {profile.birthDate && <p className="text-purple-300 text-xl font-bold">{COPY.labelDob}: {profile.birthDate}</p>}
+              {profile.birthDate && <p className="text-orange-300 text-xl font-bold">{COPY.labelDob}: {profile.birthDate}</p>}
               {profile.deathDate && profile.deathDate !== 'deceased' && <p className="text-gray-300 text-xl font-bold">{COPY.labelDod}: {profile.deathDate}</p>}
-              {!isDisambig && <p className="text-purple-400 text-xl italic mt-1">{profile.description}</p>}
+              {!isDisambig && <p className="text-orange-400 text-xl italic mt-1">{profile.description}</p>}
             </div>
           </div>
           {!isDisambig && profile.extract && <p className="text-gray-100 text-xl leading-relaxed mb-3">{profile.extract}</p>}
@@ -1294,12 +1294,12 @@ function App() {
             <div className="space-y-2 mb-2">
               {!profile.deathDate && APP_META.modules.watchlist && (alreadyWatching
                 ? <p className="text-green-400 text-xl text-center font-bold">{COPY.format(COPY.alreadyInListGeneric, { list: alreadyWatching })}</p>
-                : <button onClick={() => addWatchFromSearch(profile.title)} disabled={loading} className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50"><PlusIcon /> {COPY.actionAddToWatchlist}</button>
+                : <button onClick={() => addWatchFromSearch(profile.title)} disabled={loading} className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50"><PlusIcon /> {COPY.actionAddToWatchlist}</button>
               )}
               <button onClick={clearSearch} className="w-full py-3 bg-white/10 border border-white/20 text-white/80 rounded-xl text-xl text-center">{COPY.actionClearSearch}</button>
             </div>
           )}
-          <div className="p-2 bg-purple-900/20 border border-purple-800/20 rounded-xl">
+          <div className="p-2 bg-orange-900/20 border border-orange-800/20 rounded-xl">
             <p className="text-gray-400 text-sm mb-1">{COPY.sourceCreditFooter}</p>
             <p className="text-purple-200 text-sm">{COPY.wikiCredit}</p>
           </div>
@@ -1319,7 +1319,7 @@ function App() {
       <>
         <div className="modal-overlay" onClick={() => setSsdiDrawer(null)} />
         <div className="modal-drawer">
-          <div className="flex justify-between items-center px-4 pt-4 pb-2 border-b border-purple-900/30">
+          <div className="flex justify-between items-center px-4 pt-4 pb-2 border-b border-orange-900/30">
             <h3 className="text-white font-bold text-xl">{r.name}</h3>
             <button onClick={() => setSsdiDrawer(null)} className="text-gray-400 hover:text-white text-2xl font-bold">X</button>
           </div>
@@ -1359,13 +1359,13 @@ function App() {
                 </button>
               );
               if (APP_META.modules.watchlist) return (
-                <button onClick={() => addFromSsdi(r, false)} disabled={loading} className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 mb-3 disabled:opacity-50">
+                <button onClick={() => addFromSsdi(r, false)} disabled={loading} className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 mb-3 disabled:opacity-50">
                   <PlusIcon /> {loading ? COPY.actionAddingWatchlist : COPY.actionAddToWatchlist}
                 </button>
               );
               return null;
             })()}
-            <button onClick={() => setSsdiDrawer(null)} className="w-full py-4 bg-purple-900/40 border border-purple-800/50 text-white rounded-xl text-xl">{COPY.actionClose}</button>
+            <button onClick={() => setSsdiDrawer(null)} className="w-full py-4 bg-orange-900/40 border border-orange-800/50 text-white rounded-xl text-xl">{COPY.actionClose}</button>
           </div>
         </div>
       </>
@@ -1379,13 +1379,13 @@ function App() {
     const clientHasMore = ssdiResults.length > visibleResults.length && visibleResults.length < 20;
     const showMoreBtn = () => (clientHasMore || apiHasMore) ? (
       <button onClick={() => { if (clientHasMore) setSsdiPage(p => p + 1); else if (onLoadMore) onLoadMore(); }} disabled={ssdiLoadingMore}
-        className="w-full py-3 bg-gray-700 border border-purple-800/50 text-white rounded-xl text-2xl font-bold mt-1 mb-1">
+        className="w-full py-3 bg-gray-700 border border-orange-800/50 text-white rounded-xl text-2xl font-bold mt-1 mb-1">
         {ssdiLoadingMore ? COPY.ssdiLoading : COPY.ssdiShowMore}
       </button>
     ) : null;
     return (
-      <div className="mb-3 p-3 bg-gray-800/60 rounded-xl border border-purple-900/30">
-        <p className="text-purple-300 text-2xl font-bold mb-2">{COPY.ssdiHeader}</p>
+      <div className="mb-3 p-3 bg-gray-800/60 rounded-xl border border-orange-900/30">
+        <p className="text-orange-300 text-2xl font-bold mb-2">{COPY.ssdiHeader}</p>
         {birthYearFallback && searchBirthYear && <div className="mb-2 p-2 bg-yellow-900/30 border border-yellow-700/40 rounded-lg"><p className="text-yellow-300 text-sm">{COPY.ssdiYearFallback}</p></div>}
         {tooMany && <div className="mb-2 p-2 bg-yellow-900/30 border border-yellow-700/40 rounded-lg"><p className="text-yellow-300 text-sm">{COPY.ssdiManyMatches}</p></div>}
         {showMoreBtn()}
@@ -1468,19 +1468,19 @@ function App() {
         const selDeceased = selectedDisambig.deathDate;
         const selStatus = APP_META.modules.watchlist ? isOnWatchlist(selectedDisambig.title) : false;
         return (
-          <div className="rounded-2xl overflow-hidden border border-purple-800 shadow-lg">
+          <div className="rounded-2xl overflow-hidden border border-orange-800 shadow-lg">
             <div className={'px-5 py-3 text-center ' + (selDeceased ? 'bg-gray-800' : 'bg-green-700')}>
               <p className="text-white font-black text-3xl">{selectedDisambig.title}</p>
               <p className="text-white/80 text-xl">{selDeceased ? COPY.statusPassed : COPY.statusAliveShort}</p>
             </div>
             <div className="bg-gray-900/70 p-4">
               <div className="flex gap-3 items-start mb-3">
-                {selectedDisambig.thumbnail ? <img src={selectedDisambig.thumbnail} alt={selectedDisambig.title} className="w-16 h-16 rounded-full object-cover border-2 border-purple-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-purple-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
+                {selectedDisambig.thumbnail ? <img src={selectedDisambig.thumbnail} alt={selectedDisambig.title} className="w-16 h-16 rounded-full object-cover border-2 border-orange-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-orange-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
                 <div className="flex-1">
                   <h2 className="text-white text-2xl font-bold mb-1">{selectedDisambig.title}</h2>
-                  {selectedDisambig.birthDate && <p className="text-purple-300 text-xl font-bold">{COPY.labelDob}: {selectedDisambig.birthDate}</p>}
+                  {selectedDisambig.birthDate && <p className="text-orange-300 text-xl font-bold">{COPY.labelDob}: {selectedDisambig.birthDate}</p>}
                   {selDeceased && selectedDisambig.deathDate && selectedDisambig.deathDate !== 'deceased' && <p className="text-gray-300 text-xl font-bold">{COPY.labelDod}: {selectedDisambig.deathDate}</p>}
-                  <p className="text-purple-400 text-xl italic mt-1">{selectedDisambig.description}</p>
+                  <p className="text-orange-400 text-xl italic mt-1">{selectedDisambig.description}</p>
                 </div>
               </div>
               {selectedDisambig.extract && <p className="text-gray-100 text-xl leading-relaxed mb-3">{selectedDisambig.extract}</p>}
@@ -1510,7 +1510,7 @@ function App() {
                       await loadWatchlist(); clearWatchlistCheck(); setPage('watchlist');
                     } catch(e) { alert(COPY.format(COPY.errorGeneric, { msg: e.message })); }
                     finally { setLoadingWl(false); }
-                  }} disabled={loadingWl} className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50">
+                  }} disabled={loadingWl} className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50">
                     <PlusIcon /> {loadingWl ? COPY.actionAddingWatchlist : COPY.format(COPY.actionAddWatchTempl, { name: selectedDisambig.title })}
                   </button>
                 ) : null}
@@ -1523,7 +1523,7 @@ function App() {
         );
       }
       return (
-        <div className="rounded-2xl overflow-hidden border border-purple-800 shadow-lg">
+        <div className="rounded-2xl overflow-hidden border border-orange-800 shadow-lg">
           {(() => {
               const miF = (nw.middle || '').trim().toLowerCase().replace(/\./g, '');
               const fM = miF ? (profile.matches || []).filter(m => m.title && m.title.toLowerCase().includes(' ' + miF.charAt(0))) : (profile.matches || []);
@@ -1543,12 +1543,12 @@ function App() {
               return filteredMatches.length > 0 ? (
                 <div className="space-y-2 mb-3">
                   {filteredMatches.map((m, i) => (
-                    <button key={i} onClick={() => setSelectedDisambig(m)} className="w-full p-3 bg-gray-800/60 border border-purple-900/30 rounded-xl text-left">
+                    <button key={i} onClick={() => setSelectedDisambig(m)} className="w-full p-3 bg-gray-800/60 border border-orange-900/30 rounded-xl text-left">
                       <div className="flex items-center gap-3">
-                        {m.thumbnail ? <img src={m.thumbnail} alt={m.title} className="w-10 h-10 rounded-full object-cover border border-purple-600/40 shrink-0" /> : <div className="w-10 h-10 rounded-full bg-purple-900/40 flex items-center justify-center shrink-0 text-lg">?</div>}
+                        {m.thumbnail ? <img src={m.thumbnail} alt={m.title} className="w-10 h-10 rounded-full object-cover border border-orange-600/40 shrink-0" /> : <div className="w-10 h-10 rounded-full bg-orange-900/40 flex items-center justify-center shrink-0 text-lg">?</div>}
                         <div className="flex-1 min-w-0">
                           <p className="text-white text-2xl font-bold truncate">{m.title}</p>
-                          <p className="text-purple-400 text-xl italic truncate">{m.description}</p>
+                          <p className="text-orange-400 text-xl italic truncate">{m.description}</p>
                         </div>
                         <span className={'px-2 py-0.5 rounded-full text-xl font-bold ' + (m.deathDate ? 'bg-gray-700 text-gray-300' : 'bg-green-800 text-green-300')}>{m.deathDate ? COPY.statusPassed : COPY.statusAliveShort}</span>
                       </div>
@@ -1577,7 +1577,7 @@ function App() {
     }
 
     return (
-      <div className="rounded-2xl overflow-hidden border border-purple-800 shadow-lg">
+      <div className="rounded-2xl overflow-hidden border border-orange-800 shadow-lg">
         {showBanner && <div className={'px-5 py-3 text-center ' + bannerBg}>
           {profile && profile.title && <p className="text-white font-black text-3xl">{profile.title}</p>}
           <p className="text-white/80 text-xl">{bannerText}</p>
@@ -1586,12 +1586,12 @@ function App() {
           {showWikiBio && (
             <>
               <div className="flex gap-3 items-start mb-3">
-                {profile.thumbnail ? <img src={profile.thumbnail} alt={profile.title} className="w-16 h-16 rounded-full object-cover border-2 border-purple-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-purple-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
+                {profile.thumbnail ? <img src={profile.thumbnail} alt={profile.title} className="w-16 h-16 rounded-full object-cover border-2 border-orange-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-orange-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
                 <div className="flex-1">
                   <h2 className="text-white text-2xl font-bold mb-1">{profile.title}</h2>
-                  {profile.birthDate && <p className="text-purple-300 text-xl font-bold">{COPY.labelDob}: {profile.birthDate}</p>}
+                  {profile.birthDate && <p className="text-orange-300 text-xl font-bold">{COPY.labelDob}: {profile.birthDate}</p>}
                   {profile.deathDate && profile.deathDate !== 'deceased' && <p className="text-gray-300 text-xl font-bold">{COPY.labelDod}: {profile.deathDate}</p>}
-                  <p className="text-purple-400 text-xl italic mt-1">{profile.description}</p>
+                  <p className="text-orange-400 text-xl italic mt-1">{profile.description}</p>
                 </div>
               </div>
               {profile.extract && <p className="text-gray-100 text-xl leading-relaxed mb-3">{profile.extract}</p>}
@@ -1662,7 +1662,7 @@ function App() {
               {wikiMatchConfident && !notFound && !isWikiDeceased && APP_META.modules.watchlist && (
                 fullNameStatus
                   ? <p className="w-full py-3 text-center text-green-400 text-2xl font-bold">{COPY.format(COPY.alreadyInListGeneric, { list: fullNameStatus })}</p>
-                  : <button onClick={addSearchedNameToWatchlist} disabled={loadingWl} className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50"><PlusIcon /> {loadingWl ? COPY.actionAddingWatchlist : COPY.format(COPY.actionAddWatchTempl, { name: buildFullName() })}</button>
+                  : <button onClick={addSearchedNameToWatchlist} disabled={loadingWl} className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50"><PlusIcon /> {loadingWl ? COPY.actionAddingWatchlist : COPY.format(COPY.actionAddWatchTempl, { name: buildFullName() })}</button>
               )}
               {!hasSSdi && notFound && (
                 <>
@@ -1677,7 +1677,7 @@ function App() {
                   {fullNameStatus
                     ? <p className="w-full py-3 text-center text-green-400 text-2xl font-bold">{COPY.format(COPY.alreadyInListGeneric, { list: fullNameStatus })}</p>
                     : <>
-                        {APP_META.modules.watchlist && <button onClick={addSearchedNameToWatchlist} disabled={loadingWl} className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50">
+                        {APP_META.modules.watchlist && <button onClick={addSearchedNameToWatchlist} disabled={loadingWl} className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50">
                           <PlusIcon /> {loadingWl ? COPY.actionAddingWatchlist : COPY.format(COPY.actionAddWatchAnyway, { name: buildFullName() })}
                         </button>}
                         {APP_META.modules.memories && <button onClick={saveSearchedNameToMemories} disabled={loadingMem} className="w-full py-3 bg-gray-700/60 border border-gray-500/40 text-gray-200 rounded-xl text-xl flex items-center justify-center gap-2 disabled:opacity-50">
@@ -1710,7 +1710,7 @@ function App() {
       <>
         <div className="modal-overlay" onClick={() => setDrawerData(null)} />
         <div className="modal-drawer">
-          <div className="flex justify-between items-center px-4 pt-4 pb-2 border-b border-purple-900/30">
+          <div className="flex justify-between items-center px-4 pt-4 pb-2 border-b border-orange-900/30">
             <h3 className="text-white font-bold text-xl">{name}</h3>
             <button onClick={() => setDrawerData(null)} className="text-gray-400 hover:text-white text-2xl font-bold">X</button>
           </div>
@@ -1737,12 +1737,12 @@ function App() {
                         return (
                           <>
                             <div className="flex gap-3 items-start mb-3">
-                              {profile.thumbnail ? <img src={profile.thumbnail} alt={profile.title} className="w-16 h-16 rounded-full object-cover border-2 border-purple-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-purple-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
+                              {profile.thumbnail ? <img src={profile.thumbnail} alt={profile.title} className="w-16 h-16 rounded-full object-cover border-2 border-orange-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-orange-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
                               <div className="flex-1">
                                 <h2 className="text-white text-2xl font-bold mb-1">{profile.title}</h2>
-                                {profile.birthDate && <p className="text-purple-300 text-xl font-bold">{COPY.labelDob}: {profile.birthDate}</p>}
+                                {profile.birthDate && <p className="text-orange-300 text-xl font-bold">{COPY.labelDob}: {profile.birthDate}</p>}
                                 {deathYear && <p className="text-gray-300 text-xl font-bold">{COPY.labelDod}: {deathYear}</p>}
-                                {profile.description && <p className="text-purple-400 text-xl italic mt-1">{profile.description}</p>}
+                                {profile.description && <p className="text-orange-400 text-xl italic mt-1">{profile.description}</p>}
                               </div>
                             </div>
                             {profile.extract && <p className="text-gray-100 text-xl leading-relaxed mb-3">{profile.extract}</p>}
@@ -1753,14 +1753,14 @@ function App() {
                         return (
                           <>
                             <SsdiRecordBlock r={cachedSsdi} />
-                            <div className="p-2 bg-purple-900/10 border border-purple-800/20 rounded-xl mb-3">
-                              <p className="text-purple-300 text-sm">{COPY.drawerSavedFromSsdi}</p>
+                            <div className="p-2 bg-orange-900/10 border border-orange-800/20 rounded-xl mb-3">
+                              <p className="text-orange-300 text-sm">{COPY.drawerSavedFromSsdi}</p>
                             </div>
                           </>
                         );
                       }
                       return (
-                        <div className="bg-gray-800/60 rounded-xl p-3 border border-purple-900/30 mb-3">
+                        <div className="bg-gray-800/60 rounded-xl p-3 border border-orange-900/30 mb-3">
                           <p className="text-white font-bold text-xl mb-1">{name}</p>
                           {dob && <p className="text-gray-300 text-xl">{COPY.labelDob}: {dob}</p>}
                           {deathYear && <p className="text-gray-300 text-xl">{COPY.labelDod}: {deathYear}</p>}
@@ -1783,17 +1783,17 @@ function App() {
                           <p className="text-white/80 text-xl">{profile.deathDate ? COPY.statusPassed : profile.isDisambiguation ? COPY.statusMultiple : COPY.statusAliveShort}</p>
                         </div>
                         {newlyDeceased && (
-                          <div className="p-3 bg-purple-900/60 border border-purple-600 rounded-xl mb-3">
+                          <div className="p-3 bg-orange-900/60 border border-orange-600 rounded-xl mb-3">
                             <p className="text-purple-200 text-xl text-center font-bold">{COPY.drawerNewlyDeceased}</p>
                           </div>
                         )}
                         <div className="flex gap-3 items-start mb-3">
-                          {profile.thumbnail ? <img src={profile.thumbnail} alt={profile.title} className="w-16 h-16 rounded-full object-cover border-2 border-purple-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-purple-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
+                          {profile.thumbnail ? <img src={profile.thumbnail} alt={profile.title} className="w-16 h-16 rounded-full object-cover border-2 border-orange-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-orange-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
                           <div className="flex-1">
                             <h2 className="text-white text-2xl font-bold mb-1">{profile.title}</h2>
-                            {profile.birthDate && <p className="text-purple-300 text-xl font-bold">{COPY.labelDob}: {profile.birthDate}</p>}
+                            {profile.birthDate && <p className="text-orange-300 text-xl font-bold">{COPY.labelDob}: {profile.birthDate}</p>}
                             {profile.deathDate && profile.deathDate !== 'deceased' && <p className="text-gray-300 text-xl font-bold">{COPY.labelDod}: {profile.deathDate}</p>}
-                            {!profile.isDisambiguation && <p className="text-purple-400 text-xl italic mt-1">{profile.description}</p>}
+                            {!profile.isDisambiguation && <p className="text-orange-400 text-xl italic mt-1">{profile.description}</p>}
                           </div>
                         </div>
                         {!profile.isDisambiguation && profile.extract && <p className="text-gray-100 text-xl leading-relaxed mb-3">{profile.extract}</p>}
@@ -1802,8 +1802,8 @@ function App() {
                       </>
                     )}
                     {(!profile || !profile.deathDate) && ssdiResults && ssdiResults.length > 0 && (
-                      <div className="mt-2 pt-3 border-t border-purple-900/30">
-                        <p className="text-purple-300 text-2xl font-bold mb-2">Possible matches in SSDI (thru 2014)</p>
+                      <div className="mt-2 pt-3 border-t border-orange-900/30">
+                        <p className="text-orange-300 text-2xl font-bold mb-2">Possible matches in SSDI (thru 2014)</p>
                         {ssdiResults.map((r, i) => {
                           const rawScore = scoreResult(r, drawerFirst, drawerMI, drawerLast, '', '');
                           const exactMatch = r.first_name && r.last_name && r.first_name.toUpperCase() === drawerFirst.toUpperCase() && r.last_name.toUpperCase() === drawerLast.toUpperCase();
@@ -1847,7 +1847,7 @@ function App() {
                 )}
               </>
             )}
-            <button onClick={() => setDrawerData(null)} className="w-full py-4 bg-purple-900/40 border border-purple-800/50 text-white rounded-xl text-xl mt-4">{COPY.actionClose}</button>
+            <button onClick={() => setDrawerData(null)} className="w-full py-4 bg-orange-900/40 border border-orange-800/50 text-white rounded-xl text-xl mt-4">{COPY.actionClose}</button>
           </div>
         </div>
       </>
@@ -1861,16 +1861,16 @@ function App() {
           <img src={SKIN.assets.logo} alt={COPY.appName} onError={(e) => { e.target.style.display = 'none'; }} style={{ width: '88vw', height: '54vh', objectFit: 'contain', filter: 'brightness(2.0) drop-shadow(0 6px 24px rgba(124,58,237,0.8))' }} />
         </div>
         <div style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
-          <div className="bg-purple-950/80 backdrop-blur-sm rounded-2xl p-4 shadow-2xl border border-purple-600/40 space-y-3">
-            <input type="email" placeholder={COPY.loginEmailPH} value={email} onChange={(e) => setEmail(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && doAuth('login')} className="w-full px-4 py-3 rounded-xl bg-white/15 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 text-xl" />
+          <div className="bg-purple-950/80 backdrop-blur-sm rounded-2xl p-4 shadow-2xl border border-orange-600/40 space-y-3">
+            <input type="email" placeholder={COPY.loginEmailPH} value={email} onChange={(e) => setEmail(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && doAuth('login')} className="w-full px-4 py-3 rounded-xl bg-white/15 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xl" />
             <div className="relative">
-              <input type={showPassword ? 'text' : 'password'} placeholder={COPY.loginPasswordPH} value={password} onChange={(e) => setPassword(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && doAuth('login')} className="w-full px-4 py-3 rounded-xl bg-white/15 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 text-xl" />
+              <input type={showPassword ? 'text' : 'password'} placeholder={COPY.loginPasswordPH} value={password} onChange={(e) => setPassword(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && doAuth('login')} className="w-full px-4 py-3 rounded-xl bg-white/15 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xl" />
               <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60">{showPassword ? <EyeOffIcon /> : <EyeIcon />}</button>
             </div>
             {backendWaking && <p className="text-white/60 text-xl text-center animate-pulse">{COPY.loginBackendWake}</p>}
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => doAuth('login')} disabled={loading} className="py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl disabled:opacity-50 text-2xl">{loading ? '...' : COPY.loginBtnSignIn}</button>
-              <button onClick={() => doAuth('register')} disabled={loading} className="py-4 bg-purple-900/60 hover:bg-purple-800/80 text-white font-bold rounded-xl disabled:opacity-50 text-2xl border border-purple-400/60">{loading ? '...' : COPY.loginBtnRegister}</button>
+              <button onClick={() => doAuth('login')} disabled={loading} className="py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl disabled:opacity-50 text-2xl">{loading ? '...' : COPY.loginBtnSignIn}</button>
+              <button onClick={() => doAuth('register')} disabled={loading} className="py-4 bg-orange-900/60 hover:bg-orange-800/80 text-white font-bold rounded-xl disabled:opacity-50 text-2xl border border-orange-400/60">{loading ? '...' : COPY.loginBtnRegister}</button>
             </div>
             <p className="text-white/40 text-xl text-center">{COPY.loginStayHint}</p>
           </div>
@@ -1892,7 +1892,7 @@ function App() {
               {watchlist.filter(w => !w.is_deceased).length === 0 && (
                 <div className="py-6 text-center">
                   <p className="text-gray-300 text-xl leading-relaxed mb-2">{COPY.watchlistEmpty}</p>
-                  <p className="text-purple-300 text-xl font-medium">{COPY.watchlistEmptyHint}</p>
+                  <p className="text-orange-300 text-xl font-medium">{COPY.watchlistEmptyHint}</p>
                 </div>
               )}
             </div>
@@ -1901,17 +1901,17 @@ function App() {
                 <h2 className="text-3xl font-bold mb-1 text-white text-center">{COPY.watchlistCountLabel} ({watchlist.filter(w => !w.is_deceased).length})</h2>
                 <div className="space-y-2 mt-2">
                   {watchlist.filter(w => !w.is_deceased).map(w => (
-                    <div key={w.id} className="p-4 rounded-lg border bg-gray-800/50 border-purple-900/20">
+                    <div key={w.id} className="p-4 rounded-lg border bg-gray-800/50 border-orange-900/20">
                       {editingId === w.id ? (
                         <div className="space-y-2">
-                          <ClearableInput value={editingName} onChange={(e) => setEditingName(e.target.value)} placeholder="Enter name" inputClass="w-full px-3 py-4 border border-purple-700 rounded-lg focus:ring-2 focus:ring-purple-500 text-2xl bg-gray-700 text-white placeholder-gray-400" />
+                          <ClearableInput value={editingName} onChange={(e) => setEditingName(e.target.value)} placeholder="Enter name" inputClass="w-full px-3 py-4 border border-orange-700 rounded-lg focus:ring-2 focus:ring-orange-500 text-2xl bg-gray-700 text-white placeholder-gray-400" />
                           <div className="flex gap-2">
                             <button onClick={async () => {
                               await delWatch(w.id);
                               const token = localStorage.getItem(APP_META.storageKeys.token);
                               await fetch(API_BASE + '/watchlist', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ name: toTitleCase(editingName), location: w.location, dob: w.dob }) });
                               await loadWatchlist(); setEditingId(null); setEditingName('');
-                            }} className="flex-1 py-4 bg-purple-600 text-white rounded-lg text-2xl font-bold">Save</button>
+                            }} className="flex-1 py-4 bg-orange-600 text-white rounded-lg text-2xl font-bold">Save</button>
                             <button onClick={() => { setEditingId(null); setEditingName(''); }} className="flex-1 py-4 bg-gray-600 text-gray-200 rounded-lg text-2xl">Cancel</button>
                           </div>
                         </div>
@@ -1919,14 +1919,14 @@ function App() {
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
                             <button onClick={() => openWatchlistDrawer(w)} className="text-left w-full">
-                              <h3 className="font-semibold text-2xl text-white hover:text-purple-300 underline decoration-dotted truncate">{w.name}</h3>
+                              <h3 className="font-semibold text-2xl text-white hover:text-orange-300 underline decoration-dotted truncate">{w.name}</h3>
                             </button>
                             {w.location && <p className="text-xl text-gray-400">{w.location}</p>}
                             <div className="flex items-center gap-1 mt-1"><CheckIcon /><span className="text-xl text-green-400">{COPY.statusFollowing}</span></div>
                           </div>
                           <div className="flex gap-2 ml-2 shrink-0">
-                            <button onClick={() => { setEditingId(w.id); setEditingName(w.name); }} className="p-2 text-purple-400 hover:bg-purple-900/30 rounded-lg"><EditIcon /></button>
-                            <button onClick={() => delWatch(w.id)} className="p-2 text-purple-500 hover:bg-purple-900/30 rounded-lg"><TrashIcon /></button>
+                            <button onClick={() => { setEditingId(w.id); setEditingName(w.name); }} className="p-2 text-orange-400 hover:bg-orange-900/30 rounded-lg"><EditIcon /></button>
+                            <button onClick={() => delWatch(w.id)} className="p-2 text-orange-500 hover:bg-orange-900/30 rounded-lg"><TrashIcon /></button>
                           </div>
                         </div>
                       )}
@@ -1942,11 +1942,11 @@ function App() {
           <div className="space-y-3" style={{ paddingTop: PT }}>
             <div className="flex flex-col items-center justify-center" style={{ height: PT, marginTop: '-' + PT, paddingTop: '0.5rem', paddingBottom: '0', pointerEvents: 'none' }}>
               <img src={SKIN.assets.logo} alt={COPY.appName} onError={(e) => { e.target.style.display = 'none'; }} style={{ width: 'auto', height: 'calc(' + PT + ' - 2.5rem)', maxWidth: '95%', objectFit: 'contain', filter: 'drop-shadow(0 6px 24px rgba(124,58,237,0.9)) brightness(2.0)' }} />
-              <p className="text-purple-300 font-bold italic text-center" style={{ fontSize: isPhone ? '1.6rem' : '2.2rem', whiteSpace: 'nowrap', textShadow: '0 2px 8px rgba(0,0,0,0.8)', marginTop: '0.4rem' }}>{COPY.tagline}</p>
+              <p className="text-orange-300 font-bold italic text-center" style={{ fontSize: isPhone ? '1.6rem' : '2.2rem', whiteSpace: 'nowrap', textShadow: '0 2px 8px rgba(0,0,0,0.8)', marginTop: '0.4rem' }}>{COPY.tagline}</p>
               <p className="text-purple-200 text-center" style={{ fontSize: isPhone ? '1.0rem' : '1.2rem', textShadow: '0 1px 4px rgba(0,0,0,0.8)', marginTop: '0.2rem' }}>{COPY.taglineSub}</p>
             </div>
             <div className={cardClass} style={{ overflowY: 'auto', maxHeight: 'calc(100dvh - ' + PT + ' - 6rem)' }}>
-              <div className="mb-1 pb-1 border-b border-purple-900/30" />
+              <div className="mb-1 pb-1 border-b border-orange-900/30" />
               {watchlistChecking && <p className="text-white text-center py-4 animate-pulse text-xl">{COPY.searchButtonSearching}</p>}
               {!watchlistChecked ? (
                 <div className="space-y-2">
@@ -1956,11 +1956,11 @@ function App() {
                     const capped = words.map((w, i) => i < words.length - 1 ? toTitleCase(w) : w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                     setNw(Object.assign({}, nw, { name: capped }));
                   }} onBlur={(e) => setNw(Object.assign({}, nw, { name: smartTitleCase(e.target.value.trim()) }))} onKeyPress={(e) => e.key === 'Enter' && checkWatch()} placeholder={COPY.searchPlaceholderName} inputClass={iClass} />
-                  <button id="mw-search-btn" onFocus={() => { setTimeout(() => { var el = document.getElementById('mw-search-btn'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350); }} onClick={checkWatch} disabled={watchlistChecking} className="w-full py-3 bg-purple-600 text-white rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 text-2xl font-bold">
+                  <button id="mw-search-btn" onFocus={() => { setTimeout(() => { var el = document.getElementById('mw-search-btn'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350); }} onClick={checkWatch} disabled={watchlistChecking} className="w-full py-3 bg-orange-600 text-white rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 text-2xl font-bold">
                     <SearchIcon /> {watchlistChecking ? COPY.searchButtonSearching : COPY.searchButton}
                   </button>
                   {!showMoreFields && (
-                    <button onClick={() => setShowMoreFields(true)} className="w-full py-2 bg-gray-800/60 border border-purple-900/30 text-purple-400 text-xl text-center rounded-lg">{COPY.searchMoreDetails}</button>
+                    <button onClick={() => setShowMoreFields(true)} className="w-full py-2 bg-gray-800/60 border border-orange-900/30 text-orange-400 text-xl text-center rounded-lg">{COPY.searchMoreDetails}</button>
                   )}
                   {showMoreFields && (
                     <>
@@ -2003,7 +2003,7 @@ function App() {
                             <span className="text-xl text-gray-400 font-bold">{statusText}</span>
                             {w.location && <p className="text-gray-500 text-lg">{w.location}</p>}
                           </div>
-                          <button onClick={() => delWatch(w.id)} className="p-2 text-purple-500 hover:bg-purple-900/30 rounded-lg ml-2 shrink-0"><TrashIcon /></button>
+                          <button onClick={() => delWatch(w.id)} className="p-2 text-orange-500 hover:bg-orange-900/30 rounded-lg ml-2 shrink-0"><TrashIcon /></button>
                         </div>
                       </div>
                     );
@@ -2026,17 +2026,17 @@ function App() {
               ) : (
                 <div className="space-y-3">
                   {notifications.map(n => (
-                    <div key={n.id} className="p-3 bg-purple-950/50 border border-purple-800 rounded-xl">
+                    <div key={n.id} className="p-3 bg-purple-950/50 border border-orange-800 rounded-xl">
                       <h3 className="font-bold text-white text-xl mb-1">{n.name}</h3>
                       <p className="text-gray-300 text-xl">{n.message}</p>
                       <p className="text-gray-500 text-xl mt-1 mb-2">{new Date(n.created_at).toLocaleDateString()}</p>
                       <div className="flex gap-2">
-                        <button onClick={() => viewAlert(n)} className="flex-1 py-2 bg-purple-700/50 border border-purple-600/50 text-white rounded-lg text-xl font-bold">{COPY.actionView}</button>
+                        <button onClick={() => viewAlert(n)} className="flex-1 py-2 bg-orange-700/50 border border-orange-600/50 text-white rounded-lg text-xl font-bold">{COPY.actionView}</button>
                         <button onClick={() => keepAlert(n.id, n.watchlist_id, n.name)} className="flex-1 py-2 bg-gray-700/50 border border-gray-600/50 text-gray-200 rounded-lg text-base font-bold">
                           {COPY.actionKeep}<span className="block text-gray-400 text-xs font-normal leading-tight">{COPY.actionKeepSub}</span>
                         </button>
-                        <button onClick={() => dismissAlert2(n.id, n.watchlist_id)} className="flex-1 py-2 bg-transparent border border-purple-900/50 text-purple-400 rounded-lg text-base">
-                          {COPY.actionDismiss}<span className="block text-purple-600 text-xs leading-tight">{COPY.actionDismissSub}</span>
+                        <button onClick={() => dismissAlert2(n.id, n.watchlist_id)} className="flex-1 py-2 bg-transparent border border-orange-900/50 text-orange-400 rounded-lg text-base">
+                          {COPY.actionDismiss}<span className="block text-orange-600 text-xs leading-tight">{COPY.actionDismissSub}</span>
                         </button>
                       </div>
                     </div>
@@ -2050,17 +2050,17 @@ function App() {
         {page === 'about' && (
           <div className="space-y-4 pb-8" style={{ paddingTop: '1rem' }}>
             <div className={cardClass}>
-              <div className="mb-3 pb-2 border-b border-purple-900/30 text-center">
+              <div className="mb-3 pb-2 border-b border-orange-900/30 text-center">
                 <h2 className="text-4xl font-black text-white tracking-wide">{COPY.aboutHeader}</h2>
                 <h2 className="text-4xl font-black text-white tracking-wide">{COPY.appName}</h2>
               </div>
-              <p className="text-purple-300 italic text-xl text-center mb-3">v{APP_META.version}</p>
+              <p className="text-orange-300 italic text-xl text-center mb-3">v{APP_META.version}</p>
               <div className="flex items-center gap-4 mb-4">
-                <img src={SKIN.assets.founderPhoto} alt={COPY.founderName} className="w-14 h-14 rounded-full object-cover border-2 border-purple-600 shadow-lg shrink-0" />
+                <img src={SKIN.assets.founderPhoto} alt={COPY.founderName} className="w-14 h-14 rounded-full object-cover border-2 border-orange-600 shadow-lg shrink-0" />
                 <div>
                   <p className="font-bold text-white text-xl">{COPY.founderName}</p>
-                  <p className="text-purple-400 italic text-xl">{COPY.founderTitle}</p>
-                  <a href={'mailto:' + COPY.founderEmail} className="text-purple-400 text-xl mt-1 block">{COPY.founderEmail}</a>
+                  <p className="text-orange-400 italic text-xl">{COPY.founderTitle}</p>
+                  <a href={'mailto:' + COPY.founderEmail} className="text-orange-400 text-xl mt-1 block">{COPY.founderEmail}</a>
                 </div>
               </div>
               <p className="text-purple-200 text-2xl font-bold italic mb-3">{COPY.tagline}</p>
@@ -2074,10 +2074,10 @@ function App() {
             <div className={cardClass}>
               <h3 className="text-white text-2xl font-bold mb-4 text-center">{COPY.aboutHowItWorksHeader}</h3>
               <div className="space-y-4">
-                <div className="flex gap-3 items-start"><span className="text-purple-400 text-2xl font-black w-7 shrink-0">1.</span><p className="text-gray-300 text-xl">{COPY.aboutHowItWorks1}</p></div>
-                <div className="flex gap-3 items-start"><span className="text-purple-400 text-2xl font-black w-7 shrink-0">2.</span><p className="text-gray-300 text-xl">{COPY.aboutHowItWorks2}</p></div>
-                <div className="flex gap-3 items-start"><span className="text-purple-400 text-2xl font-black w-7 shrink-0">3.</span><p className="text-gray-300 text-xl">{COPY.aboutHowItWorks3}</p></div>
-                <div className="flex gap-3 items-start"><span className="text-purple-400 text-2xl font-black w-7 shrink-0">4.</span><p className="text-gray-300 text-xl">{COPY.aboutHowItWorks4}</p></div>
+                <div className="flex gap-3 items-start"><span className="text-orange-400 text-2xl font-black w-7 shrink-0">1.</span><p className="text-gray-300 text-xl">{COPY.aboutHowItWorks1}</p></div>
+                <div className="flex gap-3 items-start"><span className="text-orange-400 text-2xl font-black w-7 shrink-0">2.</span><p className="text-gray-300 text-xl">{COPY.aboutHowItWorks2}</p></div>
+                <div className="flex gap-3 items-start"><span className="text-orange-400 text-2xl font-black w-7 shrink-0">3.</span><p className="text-gray-300 text-xl">{COPY.aboutHowItWorks3}</p></div>
+                <div className="flex gap-3 items-start"><span className="text-orange-400 text-2xl font-black w-7 shrink-0">4.</span><p className="text-gray-300 text-xl">{COPY.aboutHowItWorks4}</p></div>
               </div>
             </div>
             {APP_META.modules.alerts && <div className={cardClass}>
@@ -2099,21 +2099,21 @@ function App() {
                 <p>{COPY.privacyRights}</p>
                 <p>{COPY.privacyMinor}</p>
                 <p>{COPY.privacyDisclaimer}</p>
-                <a href={'mailto:' + COPY.founderEmail} className="text-purple-400 text-xl">{COPY.founderEmail}</a>
+                <a href={'mailto:' + COPY.founderEmail} className="text-orange-400 text-xl">{COPY.founderEmail}</a>
               </div>
             </div>
             <div className="px-1 space-y-3 pb-2">
               <div className="p-3 bg-black/30 rounded-xl"><p className="font-medium text-gray-200 text-xl text-center">{user && user.email}</p></div>
-              <button onClick={doLogout} className="w-full py-4 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-2xl font-bold">{COPY.signOut}</button>
+              <button onClick={doLogout} className="w-full py-4 bg-orange-700 hover:bg-orange-800 text-white rounded-xl text-2xl font-bold">{COPY.signOut}</button>
               <button onClick={() => setShowDangerZone(!showDangerZone)} className="w-full py-3 text-gray-500 text-xl text-center">{showDangerZone ? COPY.accountRemovalHide : COPY.accountRemoval}</button>
               {showDangerZone && (
                 <div className="space-y-3">
                   {!showDeleteConfirm
-                    ? <button onClick={() => setShowDeleteConfirm(true)} className="w-full py-4 bg-gray-900/70 border border-purple-800 text-purple-400 rounded-xl text-xl">{COPY.deleteAccount}</button>
-                    : <div className="bg-purple-950/90 border border-purple-800 rounded-2xl p-5 space-y-3">
-                        <h3 className="font-bold text-purple-400 text-xl">{COPY.deleteConfirmHeader}</h3>
-                        <p className="text-purple-300 text-xl">{COPY.deleteConfirmBody}</p>
-                        <button onClick={doDeleteAccount} className="w-full py-4 bg-purple-700 text-white rounded-xl font-bold text-xl">{COPY.deleteConfirmBtn}</button>
+                    ? <button onClick={() => setShowDeleteConfirm(true)} className="w-full py-4 bg-gray-900/70 border border-orange-800 text-orange-400 rounded-xl text-xl">{COPY.deleteAccount}</button>
+                    : <div className="bg-purple-950/90 border border-orange-800 rounded-2xl p-5 space-y-3">
+                        <h3 className="font-bold text-orange-400 text-xl">{COPY.deleteConfirmHeader}</h3>
+                        <p className="text-orange-300 text-xl">{COPY.deleteConfirmBody}</p>
+                        <button onClick={doDeleteAccount} className="w-full py-4 bg-orange-700 text-white rounded-xl font-bold text-xl">{COPY.deleteConfirmBtn}</button>
                         <button onClick={() => { setShowDeleteConfirm(false); setShowDangerZone(false); }} className="w-full py-4 bg-gray-800 border border-gray-600 text-gray-300 rounded-xl font-medium text-xl">{COPY.deleteConfirmCancel}</button>
                       </div>
                   }
@@ -2128,22 +2128,22 @@ function App() {
 
       {APP_META.modules.navigation && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(5,0,15,0.95)', backdropFilter: 'blur(8px)', borderTop: '1px solid ' + SKIN.colors.primaryDeep, padding: '0.5rem 1rem', paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
         <div className="flex justify-around max-w-sm mx-auto">
-          <button onClick={() => { clearWatchlistCheck(); setPage('search'); }} className={'flex flex-col items-center gap-0.5 px-1 py-1 ' + (page === 'search' ? 'text-purple-400' : 'text-gray-400')}>
+          <button onClick={() => { clearWatchlistCheck(); setPage('search'); }} className={'flex flex-col items-center gap-0.5 px-1 py-1 ' + (page === 'search' ? 'text-orange-400' : 'text-gray-400')}>
             <SearchIcon /><span className="text-xl font-medium">{COPY.navSearch}</span>
           </button>
-          {APP_META.modules.watchlist && <button onClick={() => setPage('watchlist')} className={'flex flex-col items-center gap-0.5 px-1 py-1 ' + (page === 'watchlist' ? 'text-purple-400' : 'text-gray-400')}>
+          {APP_META.modules.watchlist && <button onClick={() => setPage('watchlist')} className={'flex flex-col items-center gap-0.5 px-1 py-1 ' + (page === 'watchlist' ? 'text-orange-400' : 'text-gray-400')}>
             <HeartIcon /><span className="text-xl font-medium">{COPY.navWatchlist}</span>
           </button>}
-          {APP_META.modules.memories && <button onClick={() => setPage('memories')} className={'flex flex-col items-center gap-0.5 px-1 py-1 ' + (page === 'memories' ? 'text-purple-400' : 'text-gray-400')}>
+          {APP_META.modules.memories && <button onClick={() => setPage('memories')} className={'flex flex-col items-center gap-0.5 px-1 py-1 ' + (page === 'memories' ? 'text-orange-400' : 'text-gray-400')}>
             <MemoriesIcon />
             <span className="text-xl font-medium">{COPY.navMemories}</span>
           </button>}
-          <button onClick={() => setPage('about')} className={'flex flex-col items-center gap-0.5 px-1 py-1 ' + (page === 'about' ? 'text-purple-400' : 'text-gray-400')}>
+          <button onClick={() => setPage('about')} className={'flex flex-col items-center gap-0.5 px-1 py-1 ' + (page === 'about' ? 'text-orange-400' : 'text-gray-400')}>
             <InfoIcon /><span className="text-xl font-medium">{COPY.navInfo}</span>
           </button>
-          {APP_META.modules.alerts && <button onClick={() => setPage('notifications')} className={'flex flex-col items-center gap-0.5 px-1 py-1 relative ' + (page === 'notifications' ? 'text-purple-400' : 'text-gray-400')}>
+          {APP_META.modules.alerts && <button onClick={() => setPage('notifications')} className={'flex flex-col items-center gap-0.5 px-1 py-1 relative ' + (page === 'notifications' ? 'text-orange-400' : 'text-gray-400')}>
             <BellIcon red={unreadCount > 0} />
-            {unreadCount > 0 && <span className="absolute top-0 right-1 bg-purple-600 text-white text-xl font-bold rounded-full w-4 h-4 flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+            {unreadCount > 0 && <span className="absolute top-0 right-1 bg-orange-600 text-white text-xl font-bold rounded-full w-4 h-4 flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>}
             <span className="text-xl font-medium" style={unreadCount > 0 ? {color: SKIN.colors.primary} : {}}>{COPY.navAlerts}</span>
           </button>}
         </div>
