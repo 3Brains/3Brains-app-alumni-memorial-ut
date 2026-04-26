@@ -166,7 +166,7 @@ const COPY = {
   appName: 'Alumni Memorial Watch',
   appShortName: 'MW',
   tagline: 'Whatever happened to...',
-  taglineSub: 'For Texas Exes',
+  taglineSub: '',
   metaDescription: 'Alumni Memorial Watch -  A dignified way to find out whatever happened to a fellow Longhorn.',
   navSearch: 'Search',
   navWatchlist: 'Watchlist',
@@ -1265,7 +1265,7 @@ function App() {
 
   const unreadCount = notifications.length;
   const iClass = "w-full px-4 py-3 border border-orange-900/50 rounded-lg focus:ring-2 focus:ring-orange-500 text-xl bg-gray-900/60 text-white placeholder-gray-400";
-  const cardClass = "bg-black/35 rounded-2xl p-4 shadow-lg border border-orange-900/30 backdrop-blur-sm";
+  const cardClass = "bg-black/85 rounded-2xl p-4 shadow-lg border border-orange-900/30 backdrop-blur-sm";
   const containerClass = (page === 'about') ? 'w-full max-w-3xl mx-auto px-3' : 'w-full px-3';
 
   const SingleProfileCard = ({ profile, showAddButton, onBack }) => {
