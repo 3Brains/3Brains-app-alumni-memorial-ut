@@ -1,0 +1,2160 @@
+
+<!DOCTYPE html>
+<!-- PLATFORM TEMPLATE v1.0.1 — refactored from MW v1.0.180 — safe-area fix added -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta id="mw-theme-color" name="theme-color" content="#7C3AED">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta id="mw-app-title" name="apple-mobile-web-app-title" content="Memory Watch">
+  <title id="mw-title">Memory Watch</title>
+  <meta id="mw-description" name="description" content="Memory Watch — A dignified way to find out if someone has passed. Add anyone to your watchlist and get notified when they pass away.">
+  <meta name="robots" content="index, follow">
+  <link id="mw-canonical" rel="canonical" href="https://memorywatch.app">
+  <link id="mw-manifest" rel="manifest" href="">
+  <link id="mw-apple-icon" rel="apple-touch-icon" href="">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style id="mw-base-style">
+    * { -webkit-tap-highlight-color: transparent; font-family: var(--font-family, Georgia, 'Times New Roman', serif); }
+    html, body { height: 100%; overflow-x: hidden; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .tap-pulse { animation: pulse 1.8s ease-in-out infinite; }
+    .modal-drawer {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: var(--drawer-bg, #1a1a2e); border-radius: 20px 20px 0 0;
+      border-top: 1px solid var(--primary-dark, #4C1D95);
+      max-height: 85vh; overflow-y: auto;
+      transform: translateY(0);
+      transition: transform 0.3s ease;
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+    .modal-overlay { position: fixed; inset: 0; z-index: 99; background: rgba(0,0,0,0.6); }
+
+    /* ═══ SKIN-DRIVEN TAILWIND OVERRIDES (Path B) ═══
+       Overrides Tailwind's hardcoded color classes with CSS vars
+       driven by SKIN.colors. This is what makes reskinning real. */
+    .bg-purple-600   { background-color: var(--primary) !important; }
+    .bg-purple-700   { background-color: var(--primary-hover) !important; }
+    .bg-purple-800   { background-color: var(--primary-dark) !important; }
+    .bg-purple-900   { background-color: var(--primary-deep) !important; }
+    .bg-purple-950   { background-color: var(--primary-deepest) !important; }
+    .hover\:bg-purple-700:hover { background-color: var(--primary-hover) !important; }
+    .hover\:bg-purple-800:hover { background-color: var(--primary-dark) !important; }
+
+    .text-purple-200 { color: var(--primary-light-2) !important; }
+    .text-purple-300 { color: var(--primary-light-1) !important; }
+    .text-purple-400 { color: var(--primary-accent) !important; }
+    .text-purple-500 { color: var(--primary) !important; }
+
+    .border-purple-400 { border-color: var(--primary-accent) !important; }
+    .border-purple-600 { border-color: var(--primary) !important; }
+    .border-purple-700 { border-color: var(--primary-hover) !important; }
+    .border-purple-800 { border-color: var(--primary-dark) !important; }
+    .border-purple-900 { border-color: var(--primary-deep) !important; }
+
+    .focus\:ring-purple-500:focus { --tw-ring-color: var(--primary) !important; }
+
+    .bg-green-700    { background-color: var(--status-alive) !important; }
+    .bg-green-800    { background-color: var(--status-alive-dark) !important; }
+    .text-green-300  { color: var(--status-alive-text-1) !important; }
+    .text-green-400  { color: var(--status-alive-text) !important; }
+    .border-green-800 { border-color: var(--status-alive-dark) !important; }
+
+    .bg-yellow-500   { background-color: var(--status-disambig) !important; }
+    .bg-yellow-600   { background-color: var(--status-disambig-dark) !important; }
+    .text-yellow-200 { color: var(--status-disambig-text-1) !important; }
+    .text-yellow-300 { color: var(--status-disambig-text) !important; }
+    .border-yellow-400 { border-color: var(--status-disambig-accent) !important; }
+    .border-yellow-700 { border-color: var(--status-disambig-dark) !important; }
+
+    .bg-blue-700     { background-color: var(--status-notfound) !important; }
+
+    /* Opacity variants preserved via runtime — alpha handled by Tailwind's /NN syntax */
+    /* Gray stays gray since it's semantic (neutral text/borders, status-passed bg) */
+  </style>
+</head>
+<body style="margin:0;padding:0;">
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+/* ============================================================
+   === APP META START ===
+   ============================================================ */
+const APP_META = {
+  slug: 'memory-watch',
+  displayName: 'Memory Watch',
+  version: '1.0.180',
+  verticalFamily: 'dn-consumer',
+  parentTemplate: 'platform-template-v1.0.0',
+  modules: {
+    auth: true,
+    wikipedia: true,
+    ssdi: true,
+    searchOrchestrator: true,
+    watchlist: true,
+    memories: true,
+    alerts: true,
+    navigation: true
+  },
+  backendUrl: 'https://memorial-watch-backend-2.onrender.com',
+  storageKeys: {
+    token: 'token',
+    user: 'user'
+  },
+  ssdiCacheKey: 'mw_ssdi_cache',
+  bundleId: 'com.memorywatch.app',
+  deployedAt: 'https://memorywatch.app'
+};
+/* === APP META END === */
+
+/* ============================================================
+   === SKIN CONFIG START ===
+   ============================================================ */
+const SKIN = {
+  assets: {
+    logo: 'https://raw.githubusercontent.com/3Brains/3Brains-app-alumni-memorial-ut/main/texasexeslogo.svg',
+    background: 'https://raw.githubusercontent.com/3Brains/3Brains-app-alumni-memorial-ut/main/texas_exes_wallpaper.png',
+    founderPhoto: 'https://raw.githubusercontent.com/bspencer413/memorial-watch/main/Bill.jpeg',
+    ogImage: ''
+  },
+  colors: {
+    primary: '#B75700',
+    primaryHover: '#A04A00',
+    primaryDark: '#8B3F00',
+    primaryDeep: '#6B3000',
+    primaryDeepest: '#4D2200',
+    primaryAccent: '#D17A2E',
+    primaryLight1: '#D17A2E',
+    primaryLight2: '#E8A872',
+    bgDeep: '#1A1A1A',
+    bgOverlay: 'rgba(5,0,15,0.22)',
+    bgListOverlay: 'rgba(5,0,15,0.55)',
+    cardBg: 'rgba(0,0,0,0.35)',
+    drawerBg: '#1a1a2e',
+    statusPassed: '#1F2937',
+    statusAlive: '#15803D',
+    statusAliveDark: '#166534',
+    statusAliveText: '#4ADE80',
+    statusAliveText1: '#86EFAC',
+    statusDisambig: '#EAB308',
+    statusDisambigDark: '#CA8A04',
+    statusDisambigText: '#FDE047',
+    statusDisambigText1: '#FEF08A',
+    statusDisambigAccent: '#FACC15',
+    statusNotfound: '#1D4ED8'
+  },
+  theme: {
+    themeColor: '#7C3AED',
+    manifestBg: '#4C1D95',
+    statusBarStyle: 'black'
+  },
+  typography: {
+    fontFamily: 'Georgia, \'Times New Roman\', serif'
+  }
+};
+/* === SKIN CONFIG END === */
+
+/* ============================================================
+   === COPY CONFIG START ===
+   ============================================================ */
+const COPY = {
+  appName: 'Alumni Memorial Watch',
+  appShortName: 'MW',
+  tagline: 'Whatever happened to...',
+  taglineSub: 'For Texas Exes',
+  metaDescription: 'Alumni Memorial Watch -  A dignified way to find out what happened to a fellow Longhorn.',
+  navSearch: 'Search',
+  navWatchlist: 'Watchlist',
+  navMemories: 'Memories',
+  navInfo: 'Info',
+  navAlerts: 'Alerts',
+  loginEmailPH: 'Email address',
+  loginPasswordPH: 'Password',
+  loginBtnSignIn: 'Sign In',
+  loginBtnRegister: 'Register',
+  loginStayHint: 'You\'ll stay signed in automatically',
+  loginBackendWake: 'Waking up the server...',
+  searchPlaceholderName: 'First and Last Name',
+  searchPlaceholderMiddle: 'Middle name or initial (optional)',
+  searchPlaceholderSuffix: 'Suffix: Jr., Sr., MD, III',
+  searchPlaceholderBirthYear: 'e.g. BBA \'74 or C \'74',
+  searchPlaceholderLocation: 'Location -- City, State or Country',
+  searchButton: 'Find Out',
+  searchButtonSearching: 'Searching...',
+  searchMoreDetails: 'Add more details (optional)',
+  searchSourceCredit: 'Results are based on publicly available records.',
+  statusPassed: 'Passed Away',
+  statusAliveLong: 'Likely Alive -- No sign of passing',
+  statusAliveShort: 'Likely Alive',
+  statusMultiple: 'Multiple Matches',
+  statusMultipleHint: 'Several people share this name',
+  statusNotFound: 'Name Not Found',
+  statusSaved: 'Saved',
+  statusFollowing: 'Following',
+  statusNoMatches: 'No Matches Found',
+  statusNoMatchesSub: 'Try different details below.',
+  actionAddToWatchlist: 'Add to Watchlist',
+  actionAddingWatchlist: 'Adding...',
+  actionSaveToMemories: 'Save to Memories',
+  actionSavingMemories: 'Saving...',
+  actionSaveAsMemory: 'Save as Memory',
+  actionSaveMemoryTempl: 'Save "{name}" to Memories',
+  actionAddWatchTempl: 'Add "{name}" to Watchlist',
+  actionAddWatchAnyway: 'Add "{name}" to Watchlist anyway',
+  actionSaveMemInstead: 'Save to Memories instead',
+  actionKeep: 'Keep',
+  actionKeepSub: 'Save to Memories',
+  actionDismiss: 'Dismiss',
+  actionDismissSub: 'Remove All',
+  actionEditName: 'Edit Name',
+  actionSearchAnother: 'Search for another name',
+  actionClearSearch: 'Clear Search',
+  actionBackToList: 'Back to list',
+  actionClose: 'Close',
+  actionView: 'View',
+  watchlistHeader: 'Watchlist',
+  watchlistSubheader: 'Touch a name to refresh their info',
+  watchlistEmpty: 'No one on your watchlist yet.',
+  watchlistEmptyHint: 'Use Search to find and add people.',
+  watchlistCountLabel: 'Your Watchlist',
+  memoriesHeader: 'Memories',
+  memoriesSubheader: 'People you have saved',
+  memoriesEmpty: 'Search for a name and save them here for future reference.',
+  memoriesTapHint: 'Tap a name to see saved info',
+  memoriesAlreadyIn: 'Already in your Memories',
+  alertsHeader: 'Alerts',
+  alertsSubheader: 'New info about people on your Watchlist',
+  alertsEmpty: 'No alerts yet',
+  alertsEmptyHint: 'We\'ll alert you when there is new info about someone on your Watchlist',
+  alertsTestInjectMsg: 'Test alert -- Wikipedia shows updated information about this person.',
+  alertsNeedWatchlist: 'Add someone to your Watchlist first -- the test alert needs a real Watchlist entry to work with.',
+  aboutHeader: 'About',
+  aboutStoryP1: 'Old friends. Family. People we once knew of. Are they still out there?',
+  aboutStoryP2: '"Google it," they say. But that\'s easier said than done.',
+  aboutStoryP3: 'So we built Alumni Memorial Watch to help you Find Out -- a dignified, simple way to see whatever may have happened to people from your past.',
+  aboutStoryP4: 'Alumni Memorial Watch monitors public information, not individuals. No ads. No paywalls. Just simple respectful answers.',
+  aboutHowItWorksHeader: 'How it works',
+  aboutHowItWorks1: 'Enter a name to search public records to see if they\'re still with us.',
+  aboutHowItWorks2: 'If no public information is found, you can add them to your Watchlist to get Alerts with new information.',
+  aboutHowItWorks3: 'If they are no longer with us, you can save them to your Memories for future reference.',
+  aboutHowItWorks4: 'Alumni Memorial Watch is free to use. Future features may include optional upgrades.',
+  aboutAlertsHeader: 'About Alerts',
+  aboutAlertsBody: 'The Watchlist is a core feature of Alumni Memorial Watch Your Watchlist lets you follow updates from public records for people you care about. If information is found, or if no information is available, you can add them to your Watchlist. When we find new public information you\'ll see an Alert in the app.',
+  aboutAlertView: 'View -- see the latest information.',
+  aboutAlertKeep: 'Keep -- add this person to your Memories.',
+  aboutAlertDismiss: 'Dismiss -- remove this alert.',
+  founderName: 'Bill Spencer',
+  founderTitle: 'Founder',
+  founderEmail: 'hello@memorywatch.app',
+  privacyTitle: 'Privacy Policy',
+  privacyLastUpdated: 'Last updated: March 2026',
+  privacyCollect: 'We collect: your email address, watchlist names, search queries, and anonymous usage data.',
+  privacyUse: 'How we use it: We do not sell your personal information. Ever.',
+  privacySources: 'Data sources: Information is based on publicly available sources, including Wikipedia and the Social Security Death Index.',
+  privacyRights: 'Your rights: You may delete your account and all associated data at any time.',
+  privacyMinor: 'Minor protection: Alumni Memorial Watch is not intended for searching individuals under 18 years of age.',
+  privacyDisclaimer: 'Disclaimer: Information is based on publicly available sources. It may not be complete or up to date. Alumni Memorial Watch does not provide real-time tracking or monitoring of individuals.  An independent project, not affiliated with The University of Texas at Austin or the Texas Exes',
+  signOut: 'Sign Out',
+  accountRemoval: 'Account Removal',
+  accountRemovalHide: 'Hide',
+  deleteAccount: 'Delete Account',
+  deleteConfirmHeader: 'Are you sure?',
+  deleteConfirmBody: 'This will permanently delete your account and all data.',
+  deleteConfirmBtn: 'Yes, Permanently Delete My Account',
+  deleteConfirmCancel: 'Cancel',
+  deleteSuccess: 'Your account has been permanently deleted.',
+  confidenceProbable: 'Probable Match',
+  confidencePotential: 'Potential Match',
+  confidencePartial: 'Partial Match',
+  sourceCreditFooter: 'Based on publicly available sources.',
+  wikiCredit: 'Data provided by Wikipedia. Alumni Memorial Watch donates a portion of revenues to the Wikimedia Foundation.',
+  ssdiSourceCredit: 'Source: SSDI (records through 2014)',
+  ssdiHeader: 'Possible matches in SSDI (thru 2014) -- tap a name to view',
+  ssdiNoMatch: 'Not found in SSDI (thru 2014)',
+  ssdiShowMore: 'Show 10 more ↓',
+  ssdiLoading: 'Loading...',
+  ssdiManyMatches: 'Many matches found. Tap "Edit Name" below to add a middle name, initial or birth year for exact matches.',
+  ssdiYearFallback: 'No exact birth year match -- showing all results.',
+  ssdiNoExactMi: 'No exact matches found in SSDI.',
+  ssdiNoExactHint: 'They may have passed after 2014, or try different details. You can still add them to your Watchlist.',
+  ssdiYearWikiNote: 'Birth year filters SSDI records only -- Wikipedia results are not filtered by birth year.',
+  drawerChecking: 'Checking records...',
+  drawerNoRecords: 'No public records found. Watching for new information.',
+  drawerNewlyDeceased: 'Status just updated -- this person has passed away. Notification sent.',
+  drawerNoInfoSaved: 'No additional information available at this time.',
+  drawerNoWikiSsdi: 'No Wikipedia or SSDI record found.',
+  drawerSavedFromSsdi: 'Saved from SSDI records (through 2014). No Wikipedia entry found.',
+  labelDob: 'DOB',
+  labelDod: 'DOD',
+  labelMiddle: 'Middle',
+  labelSuffix: 'Suffix',
+  labelState: 'State',
+  labelLocation: 'Location',
+  errorGeneric: 'Error: {msg}',
+  alreadyInList: '{name} is already in your {list}!',
+  alreadyInListGeneric: 'Already in your {list}',
+  wikipediaLikelyMismatch: 'Wikipedia found a "{title}" but details don\'t fully match. SSDI records may be a better fit.',
+  noWikiMatchesHint: 'No Wikipedia matches found. Try adding a middle name or initial.',
+  noWikiWithInitial: 'No Wikipedia matches with that initial.',
+  showingSsdiBelow: 'Showing SSDI records below.',
+  deceasedBirthYearThreshold: 100,
+  format: function(tpl, vars) {
+    if (!tpl) return '';
+    return tpl.replace(/\{(\w+)\}/g, function(_, k) {
+      return vars && vars[k] !== undefined ? vars[k] : '';
+    });
+  }
+};
+/* === COPY CONFIG END === */
+
+/* ============================================================
+   === SEARCH CONFIG START ===
+   ============================================================ */
+const SEARCH_CONFIG = {
+  primary: 'wikipedia',
+  fallback: 'ssdi',
+  fallbackRule: 'wiki_zero_AND_has_mi_or_class',
+  neverFloodOnBareName: true,
+  showFallbackWithConfidentAliveMatch: false
+};
+/* === SEARCH CONFIG END === */
+
+/* ============================================================
+   RUNTIME BOOTSTRAP — applies SKIN + META to the DOM
+   ============================================================ */
+(function applySkin() {
+  // Inject SKIN colors as CSS variables
+  const root = document.documentElement;
+  const c = SKIN.colors;
+  root.style.setProperty('--primary',             c.primary);
+  root.style.setProperty('--primary-hover',       c.primaryHover);
+  root.style.setProperty('--primary-dark',        c.primaryDark);
+  root.style.setProperty('--primary-deep',        c.primaryDeep);
+  root.style.setProperty('--primary-deepest',     c.primaryDeepest);
+  root.style.setProperty('--primary-accent',      c.primaryAccent);
+  root.style.setProperty('--primary-light-1',     c.primaryLight1);
+  root.style.setProperty('--primary-light-2',     c.primaryLight2);
+  root.style.setProperty('--bg-deep',             c.bgDeep);
+  root.style.setProperty('--drawer-bg',           c.drawerBg);
+  root.style.setProperty('--status-alive',        c.statusAlive);
+  root.style.setProperty('--status-alive-dark',   c.statusAliveDark);
+  root.style.setProperty('--status-alive-text',   c.statusAliveText);
+  root.style.setProperty('--status-alive-text-1', c.statusAliveText1);
+  root.style.setProperty('--status-disambig',     c.statusDisambig);
+  root.style.setProperty('--status-disambig-dark', c.statusDisambigDark);
+  root.style.setProperty('--status-disambig-text', c.statusDisambigText);
+  root.style.setProperty('--status-disambig-text-1', c.statusDisambigText1);
+  root.style.setProperty('--status-disambig-accent', c.statusDisambigAccent);
+  root.style.setProperty('--status-notfound',     c.statusNotfound);
+  root.style.setProperty('--font-family',         SKIN.typography.fontFamily);
+
+  // Apply META to document head
+  document.getElementById('mw-title').textContent = COPY.appName;
+  document.getElementById('mw-description').setAttribute('content', COPY.metaDescription);
+  document.getElementById('mw-theme-color').setAttribute('content', SKIN.theme.themeColor);
+  document.getElementById('mw-app-title').setAttribute('content', COPY.appName);
+  document.getElementById('mw-canonical').setAttribute('href', APP_META.deployedAt);
+  document.getElementById('mw-apple-icon').setAttribute('href', SKIN.assets.logo);
+
+  // Generate manifest inline base64 (kept inline per spec Q2)
+  const manifest = {
+    name: COPY.appName,
+    short_name: COPY.appShortName,
+    start_url: '/',
+    display: 'standalone',
+    background_color: SKIN.theme.manifestBg,
+    theme_color: SKIN.theme.themeColor,
+    icons: [{ src: SKIN.assets.logo, sizes: '512x512', type: 'image/png' }]
+  };
+  const manifestB64 = btoa(JSON.stringify(manifest));
+  document.getElementById('mw-manifest').setAttribute('href', 'data:application/json;base64,' + manifestB64);
+})();
+
+/* ============================================================
+   UI HELPERS — shared utilities used across modules
+   Icons, inputs, layout helpers. Vertical-agnostic.
+   ============================================================ */
+const isPhone = window.innerWidth < 500;
+const isTablet = window.innerWidth >= 500 && window.innerWidth < 1024;
+const PT = isPhone ? '41vh' : isTablet ? '46vh' : '44vh';
+
+const API_BASE = APP_META.backendUrl;
+const DECEASED_BIRTH_YEAR_THRESHOLD = new Date().getFullYear() - COPY.deceasedBirthYearThreshold;
+
+const extractYear = (dateStr) => {
+  if (!dateStr) return null;
+  const m = String(dateStr).match(/\b(19|20)\d{2}\b/);
+  return m ? m[0] : null;
+};
+
+const toTitleCase = (str) => {
+  if (!str) return str;
+  return str
+    .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
+    .replace(/'\w/g, (txt) => txt.toUpperCase());
+};
+
+const smartTitleCase = (str) => {
+  if (!str) return str;
+  return str.trim().replace(/\s+/g, ' ').split(' ').map(function(w) {
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join(' ');
+};
+
+const normalizeForWiki = (name) => {
+  if (!name) return name;
+  name = name.trim();
+  if (name.indexOf(',') > -1) {
+    const parts = name.split(',');
+    name = parts[1].trim() + ' ' + parts[0].trim();
+  }
+  const words = name.split(/\s+/).filter(w => {
+    const stripped = w.replace(/\./g, '');
+    return stripped.length > 1;
+  });
+  if (words.length >= 3) return toTitleCase(words[0] + ' ' + words[words.length - 1]);
+  return toTitleCase(words.join(' '));
+};
+
+const addInitialPeriods = (name) => {
+  if (!name) return name;
+  return name.trim().split(/\s+/).map((word, i, arr) => {
+    if (word.length === 1 && /[A-Za-z]/.test(word) && i > 0 && i < arr.length - 1) return word + '.';
+    return word;
+  }).join(' ');
+};
+
+const fuzzyMatch = (a, b) => {
+  if (!a || !b) return false;
+  a = a.toLowerCase().trim(); b = b.toLowerCase().trim();
+  if (a === b) return true;
+  if (a.startsWith(b) || b.startsWith(a)) return true;
+  const longer = a.length >= b.length ? a : b;
+  const shorter = a.length < b.length ? a : b;
+  if (longer.length === 0) return true;
+  let matches = 0;
+  for (let i = 0; i < shorter.length; i++) { if (longer.indexOf(shorter[i]) !== -1) matches++; }
+  return (matches / longer.length) >= 0.8;
+};
+
+const parseBirthYear = (birth_date) => {
+  if (!birth_date) return 9999;
+  var yr = parseInt(extractYear(birth_date) || '0');
+  return yr > 0 ? yr : 9999;
+};
+
+const scoreResult = (result, searchFirst, searchMiddle, searchLast, searchBirthYear, searchSuffix) => {
+  let score = 0;
+  const rFirst = (result.first_name || '').toUpperCase();
+  const rMiddle = (result.middle_name || '').toUpperCase();
+  const rLast = (result.last_name || '').toUpperCase();
+  const rSuffix = (result.suffix || '').toUpperCase();
+  const rDob = (result.birth_date || '');
+  const sFirst = (searchFirst || '').toUpperCase();
+  const sMiddle = (searchMiddle || '').toUpperCase().replace('.','');
+  const sLast = (searchLast || '').toUpperCase();
+  const sSuffix = (searchSuffix || '').toUpperCase();
+  const lastNameOnly = !sFirst;
+  score += lastNameOnly ? 50 : 30;
+  if (sFirst) {
+    if (rFirst === sFirst) score += 30;
+    else if (rFirst.startsWith(sFirst) && rFirst.length <= sFirst.length + 1) score += 15;
+  }
+  if (sMiddle && rMiddle) {
+    if (rMiddle === sMiddle || rMiddle.startsWith(sMiddle) || sMiddle.startsWith(rMiddle)) score += 30;
+  }
+  if (searchBirthYear && rDob) { if (rDob.includes(searchBirthYear)) score += 15; }
+  if (sSuffix && rSuffix && rSuffix === sSuffix) score += 5;
+  return score;
+};
+
+const confidenceLabel = (score) => {
+  if (score >= 90) return COPY.confidenceProbable;
+  if (score >= 60) return COPY.confidencePotential;
+  return COPY.confidencePartial;
+};
+
+// ─── Icons (shared across verticals per spec Q3) ───
+const SearchIcon = () => (
+  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+);
+const HeartIcon = () => (
+  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+  </svg>
+);
+const InfoIcon = () => (
+  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+const BellIcon = ({ red }) => (
+  <svg className="w-7 h-7" fill="none" stroke={red ? SKIN.colors.primary : 'currentColor'} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+  </svg>
+);
+const MemoriesIcon = () => (
+  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+const PlusIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+  </svg>
+);
+const TrashIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+  </svg>
+);
+const EditIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+  </svg>
+);
+const CheckIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+  </svg>
+);
+const EyeIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+);
+const EyeOffIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+  </svg>
+);
+
+const ClearableInput = ({ value, onChange, onBlur, onKeyPress, placeholder, type='text', maxLength, inputClass, numeric }) => (
+  <div className="relative">
+    <input type={numeric ? 'tel' : type} placeholder={placeholder} value={value} onChange={onChange} onBlur={onBlur} onKeyPress={onKeyPress} maxLength={maxLength} className={inputClass + ' pr-10'}
+      autoCorrect="off" autoCapitalize="words" autoComplete="off" spellCheck="false" />
+    {value && value.length > 0 && (
+      <button onClick={() => onChange({ target: { value: '' } })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xl font-bold leading-none" type="button">X</button>
+    )}
+  </div>
+);
+
+const CardPageHeader = ({ title, subtitle }) => (
+  <div className="mb-3 pb-2 border-b border-purple-900/30 text-center">
+    <h2 className="text-4xl font-black text-white tracking-wide">{title}</h2>
+    {subtitle && <p className="text-gray-300 text-xl mt-1">{subtitle}</p>}
+  </div>
+);
+
+const POSTER_STYLE = {
+  backgroundColor: SKIN.colors.bgDeep,
+  backgroundImage: 'url(' + SKIN.assets.background + ')',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center top',
+  backgroundRepeat: 'no-repeat',
+  backgroundAttachment: 'scroll',
+};
+
+const WOOD_STYLE = {
+  backgroundColor: '#120820',
+  backgroundImage: 'url(' + SKIN.assets.background + ')',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center top',
+  backgroundRepeat: 'no-repeat',
+  backgroundAttachment: 'scroll',
+  filter: 'none',
+};
+
+const PageWrapper = ({ children, bgStyle }) => {
+  var bg = bgStyle || POSTER_STYLE;
+  var isListPage = bg === WOOD_STYLE;
+  return (
+    <div style={{ minHeight: '100dvh', width: '100%', position: 'relative', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))', backgroundColor: bg.backgroundColor, backgroundImage: bg.backgroundImage || 'none', backgroundSize: bg.backgroundSize || 'auto', backgroundPosition: bg.backgroundPosition || 'top', backgroundRepeat: bg.backgroundRepeat || 'no-repeat', backgroundAttachment: bg.backgroundAttachment || 'scroll' }}>
+      {isListPage && <div style={{ position: 'fixed', inset: 0, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', backgroundColor: SKIN.colors.bgListOverlay, zIndex: 0 }} />}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isListPage ? 'transparent' : SKIN.colors.bgOverlay }} />
+      <div style={{ position: 'relative', zIndex: 10 }}>{children}</div>
+    </div>
+  );
+};
+
+/* ============================================================
+   === MODULE: WIKIPEDIA START ===
+   ============================================================ */
+function isDeceasedCheck(extract, description, deathDate, type) {
+  if (type === 'disambiguation') return false;
+  if (deathDate) return true;
+  const firstSentence = extract ? extract.split('.')[0] : '';
+  const hasDeathInBrackets = /\(\d{4}\s*[-\u2013\u2014]+\s*\d{4}\)/.test(firstSentence);
+  const hasBornOnly = /\([^)]*born\s+\w+\s+\d+,\s+\d{4}\)/.test(firstSentence) || /\([^)]*born\s+\d{4}\)/.test(firstSentence);
+  if (hasBornOnly) return false;
+  const isPastTense = /^[^.]*\bwas (an?|the)\b[^.]*\./.test(extract) && !/\([^)]*born/.test(firstSentence) && !/born\s+\d{4}/.test(description) && !/\b(serves|serving|since|has served|has been|retired)\b/i.test(extract);
+  const diedInFirstSentence = /\b(died|passed away|deceased)\b/i.test(firstSentence);
+  const diedInDescription = /\b(died|passed away|deceased)\b/i.test(description);
+  return hasDeathInBrackets || isPastTense || diedInFirstSentence || diedInDescription;
+}
+
+const Wiki = {
+  fetchAction: async function(name) {
+    try {
+      const params = new URLSearchParams({
+        action: 'query', titles: name, prop: 'extracts|pageprops|categories|info',
+        exintro: 'true', explaintext: 'true', redirects: '1', cllimit: '50', format: 'json', origin: '*'
+      });
+      const data = await (await fetch('https://en.wikipedia.org/w/api.php?' + params)).json();
+      const pages = data.query && data.query.pages ? data.query.pages : {};
+      var page = Object.values(pages)[0];
+      if (!page || page.missing !== undefined) {
+        try {
+          const searchParams = new URLSearchParams({
+            action: 'query', list: 'search', srsearch: name, srlimit: '1', format: 'json', origin: '*'
+          });
+          const searchData = await (await fetch('https://en.wikipedia.org/w/api.php?' + searchParams)).json();
+          const searchResults = searchData.query && searchData.query.search;
+          if (searchResults && searchResults.length > 0) {
+            const foundTitle = searchResults[0].title;
+            const params2 = new URLSearchParams({
+              action: 'query', titles: foundTitle, prop: 'extracts|pageprops|categories|info',
+              exintro: 'true', explaintext: 'true', redirects: '1', cllimit: '50', format: 'json', origin: '*'
+            });
+            const data2 = await (await fetch('https://en.wikipedia.org/w/api.php?' + params2)).json();
+            const pages2 = data2.query && data2.query.pages ? data2.query.pages : {};
+            page = Object.values(pages2)[0];
+            if (!page || page.missing !== undefined) return null;
+          } else { return null; }
+        } catch(e) { return null; }
+      }
+      const title = page.title || name;
+      const extract = page.extract || '';
+      const categories = (page.categories || []).map(cat => cat.title || '');
+      const deathFromCategory = categories.some(cat => /deaths|murdered|executed/i.test(cat));
+      const isDisambig = !!(page.pageprops && page.pageprops.disambiguation !== undefined) || title.toLowerCase().includes('(disambiguation)');
+      if (isDisambig) return { type: 'disambiguation', isDisambiguation: true, title: title.replace(/ \(disambiguation\)/i, ''), extract, matches: [] };
+      let thumbnail = null, birthDate = null, deathDate = null, description = '';
+      try {
+        const sum = await (await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title))).json();
+        thumbnail = sum.thumbnail ? sum.thumbnail.source : null;
+        birthDate = sum.birth_date || null;
+        deathDate = sum.death_date || null;
+        description = sum.description || '';
+        const isNotPerson = /\b(film|movie|album|song|television|TV series|video game|book|novel)\b/i.test(description) && !birthDate;
+        if (isNotPerson) return null;
+      } catch(e) {}
+      if (!deathDate || deathDate.length <= 4) {
+        const months = 'January|February|March|April|May|June|July|August|September|October|November|December';
+        const dateMatches = extract.match(new RegExp('(?:' + months + ') [0-9]{1,2}, [0-9]{4}', 'g'));
+        if (dateMatches && dateMatches.length >= 2) deathDate = dateMatches[dateMatches.length - 1];
+        else if (dateMatches && dateMatches.length === 1 && /died|passed|\u2013|\u2014/.test(extract.split('.')[0])) deathDate = dateMatches[0];
+      }
+      if (deathDate && !deathFromCategory) {
+        const yr = parseInt(extractYear(deathDate) || '0');
+        if (!yr || yr < 1900 || yr > 2030) deathDate = null;
+      }
+      // CRITICAL ORDERING — do not reorder these next 4 lines. See DECISION-2026-03-XX-MW-ARCH-001.
+      const isLikelyAlive = /\b(serving|serves|since|current|retired)\b/i.test(description) || /\bretired\b/i.test(extract) || /chief justice|associate justice/i.test(description) || (/\bborn\b/i.test(extract.split('.')[0]) && !/\(\d{4}[-\u2013\u2014]+\d{4}\)/.test(description));
+      if (isLikelyAlive) deathDate = null;
+      const deceased = (deathFromCategory && !isLikelyAlive) || (!!deathDate && !isLikelyAlive) || (!isLikelyAlive && isDeceasedCheck(extract, description, deathDate, 'standard'));
+      return { title, extract, thumbnail, birthDate, deathDate: deceased ? (deathDate || 'deceased') : null, description, isDisambiguation: false, deathFromCategory };
+    } catch(e) { return null; }
+  },
+
+  fetchDisambigMatches: async function(title) {
+    try {
+      const url = 'https://en.wikipedia.org/w/api.php?action=parse&page=' + encodeURIComponent(title) + '&prop=links&format=json&origin=*';
+      const data = await (await fetch(url)).json();
+      const links = (data.parse && data.parse.links) ? data.parse.links : [];
+      const personLinks = links.filter(l => l.ns === 0 && l['*'] && l['*'].length > 2).map(l => l['*']).slice(0, 20);
+      const results = [];
+      const titleParts = title.trim().split(/\s+/);
+      const searchLastName = titleParts[titleParts.length - 1].toUpperCase();
+      for (const link of personLinks) {
+        const profile = await Wiki.fetchAction(link);
+        if (!profile || profile.isDisambiguation || !profile.extract) continue;
+        const linkLastName = profile.title ? profile.title.trim().split(/\s+/).pop().toUpperCase() : '';
+        if (searchLastName.length > 2 && linkLastName !== searchLastName) continue;
+        const desc = (profile.description || '').toLowerCase();
+        const extract = (profile.extract || '').toLowerCase();
+        const looksLikePerson = profile.birthDate || profile.deathDate ||
+          /\b(born|died|american|british|politician|actor|actress|singer|musician|athlete|author|writer|director|businessman|scientist|lawyer|doctor|physician|soldier|general|president|senator|governor|mayor)\b/.test(desc + ' ' + extract);
+        if (!looksLikePerson) continue;
+        results.push(profile);
+        if (results.length >= 6) break;
+      }
+      return results;
+    } catch(e) { return []; }
+  },
+
+  fetchProfile: async function(name) {
+    try {
+      const nameWithPeriods = addInitialPeriods(name.trim());
+      let result = null;
+      try { result = await Wiki.fetchAction(nameWithPeriods); } catch(e) {}
+      if (!result) {
+        try { result = await Wiki.fetchAction(name.trim().toLowerCase()); } catch(e) {}
+      }
+      if (!result) return { isDisambiguation: false, notFound: true };
+      if (result.type === 'disambiguation') {
+        let matches = [];
+        try { matches = await Wiki.fetchDisambigMatches(result.title); } catch(e) {}
+        return { isDisambiguation: true, title: result.title || name, matches: matches || [] };
+      }
+      const searchWords = name.trim().toLowerCase().split(/\s+/);
+      const titleWords = (result.title || '').toLowerCase().replace(/\(.*\)/g, '').trim().split(/\s+/);
+      const searchLast = searchWords[searchWords.length - 1];
+      const titleLast = titleWords[titleWords.length - 1];
+      if (!fuzzyMatch(searchLast, titleLast)) return { isDisambiguation: false, notFound: true };
+      return result;
+    } catch(e) { return { isDisambiguation: false, notFound: true }; }
+  }
+};
+/* === MODULE: WIKIPEDIA END === */
+
+/* ============================================================
+   === MODULE: SSDI START ===
+   ============================================================ */
+const Ssdi = {
+  getCache: function() {
+    try { return JSON.parse(localStorage.getItem(APP_META.ssdiCacheKey) || '{}'); } catch(e) { return {}; }
+  },
+
+  cacheRecord: function(name, record) {
+    if (!name || !record) return;
+    try {
+      const cache = Ssdi.getCache();
+      cache[name.trim().toLowerCase()] = {
+        name: record.name,
+        first_name: record.first_name,
+        last_name: record.last_name,
+        middle_name: record.middle_name,
+        suffix: record.suffix,
+        birth_date: record.birth_date,
+        death_date: record.death_date,
+        state: record.state
+      };
+      localStorage.setItem(APP_META.ssdiCacheKey, JSON.stringify(cache));
+    } catch(e) {}
+  },
+
+  getCached: function(name) {
+    if (!name) return null;
+    try {
+      const cache = Ssdi.getCache();
+      return cache[name.trim().toLowerCase()] || null;
+    } catch(e) { return null; }
+  },
+
+  getCachedFlexible: function(name) {
+    if (!name) return null;
+    var hit = Ssdi.getCached(name);
+    if (hit) return hit;
+    var normalized = normalizeForWiki(name);
+    if (normalized && normalized.toLowerCase() !== name.trim().toLowerCase()) {
+      hit = Ssdi.getCached(normalized);
+      if (hit) return hit;
+    }
+    try {
+      var cache = Ssdi.getCache();
+      var parts = name.trim().toLowerCase().split(/\s+/);
+      var nameFirst = parts[0] || '';
+      var nameLast = parts[parts.length - 1] || '';
+      var keys = Object.keys(cache);
+      for (var i = 0; i < keys.length; i++) {
+        var kparts = keys[i].split(/\s+/);
+        var kFirst = kparts[0] || '';
+        var kLast = kparts[kparts.length - 1] || '';
+        if (fuzzyMatch(nameFirst, kFirst) && fuzzyMatch(nameLast, kLast)) return cache[keys[i]];
+      }
+    } catch(e) {}
+    return null;
+  },
+
+  search: async function(params) {
+    const token = localStorage.getItem(APP_META.storageKeys.token);
+    const qs = new URLSearchParams(params);
+    try {
+      const r = await fetch(API_BASE + '/ssdi/search?' + qs.toString(), { headers: { 'Authorization': 'Bearer ' + token } });
+      if (!r.ok) return { results: [], has_more: false };
+      return await r.json();
+    } catch(e) { return { results: [], has_more: false }; }
+  }
+};
+
+// SSDI record rendering blocks
+const SsdiRecordBlock = ({ r }) => {
+  if (!r) return null;
+  return (
+    <div className="bg-gray-800/60 rounded-xl p-3 border border-purple-900/30 mb-3">
+      <p className="text-white font-bold text-xl mb-1">{r.name}</p>
+      {r.middle_name && <p className="text-gray-300 text-xl">{COPY.labelMiddle}: {r.middle_name}</p>}
+      {r.birth_date && <p className="text-gray-300 text-xl">{COPY.labelDob}: {r.birth_date}</p>}
+      {r.death_date && <p className="text-gray-300 text-xl">{COPY.labelDod}: {r.death_date}</p>}
+      {r.state && <p className="text-gray-300 text-xl">{COPY.labelState}: {r.state}</p>}
+      {r.suffix && <p className="text-gray-400 text-lg">{COPY.labelSuffix}: {r.suffix}</p>}
+      <p className="text-gray-500 text-sm mt-2">{COPY.ssdiSourceCredit}</p>
+    </div>
+  );
+};
+/* === MODULE: SSDI END === */
+
+/* ============================================================
+   MAIN APP COMPONENT
+   Reads APP_META.modules to toggle Watchlist/Memories/Alerts.
+   ============================================================ */
+function App() {
+  const [page, setPage] = useState('login');
+  const [auth, setAuth] = useState(false);
+  const [user, setUser] = useState(null);
+  const [watchlist, setWatchlist] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [results, setResults] = useState([]);
+  const [searched, setSearched] = useState(false);
+  const [wikiProfile, setWikiProfile] = useState(null);
+  const [watchlistCheck, setWatchlistCheck] = useState(null);
+  const [watchlistChecking, setWatchlistChecking] = useState(false);
+  const [watchlistChecked, setWatchlistChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingWl, setLoadingWl] = useState(false);
+  const [loadingMem, setLoadingMem] = useState(false);
+  const [backendWaking, setBackendWaking] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [nw, setNw] = useState({ name: '', middle: '', suffix: '', location: '', birthYear: '' });
+  const [showMoreFields, setShowMoreFields] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editingName, setEditingName] = useState('');
+  const [showDangerZone, setShowDangerZone] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [drawerData, setDrawerData] = useState(null);
+  const [ssdiOffset, setSsdiOffset] = useState(0);
+  const [ssdiHasMore, setSsdiHasMore] = useState(false);
+  const [ssdiLoadingMore, setSsdiLoadingMore] = useState(false);
+  const [ssdiAllResults, setSsdiAllResults] = useState([]);
+  const [drawerRefreshing, setDrawerRefreshing] = useState(false);
+  const [selectedDisambig, setSelectedDisambig] = useState(null);
+  const [apiVersion, setApiVersion] = useState('...');
+  const [ssdiDrawer, setSsdiDrawer] = useState(null);
+  const [ssdiPage, setSsdiPage] = useState(1);
+
+  useEffect(() => {
+    fetch(API_BASE + '/health').then(r => r.json()).then(d => setApiVersion(d.version || '?')).catch(() => setApiVersion('?'));
+    const t = localStorage.getItem(APP_META.storageKeys.token);
+    const u = localStorage.getItem(APP_META.storageKeys.user);
+    if (t && u) { setUser(JSON.parse(u)); setAuth(true); setPage('search'); loadWatchlist(); loadNotifications(); }
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setTimeout(() => { document.querySelectorAll('input').forEach(i => i.blur()); }, 100);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  const loadWatchlist = async () => {
+    if (!APP_META.modules.watchlist && !APP_META.modules.memories) return;
+    try {
+      const token = localStorage.getItem(APP_META.storageKeys.token);
+      const r = await fetch(API_BASE + '/watchlist', { headers: { 'Authorization': 'Bearer ' + token } });
+      if (!r.ok) throw new Error('Failed');
+      setWatchlist(await r.json());
+    } catch (e) { console.error(e); }
+  };
+
+  const loadNotifications = async () => {
+    if (!APP_META.modules.alerts) return;
+    try {
+      const token = localStorage.getItem(APP_META.storageKeys.token);
+      const r = await fetch(API_BASE + '/notifications', { headers: { 'Authorization': 'Bearer ' + token } });
+      if (!r.ok) throw new Error('Failed');
+      setNotifications(await r.json());
+    } catch (e) { console.error(e); }
+  };
+
+  /* ─── Alerts helpers (preserved verbatim from MW v1.0.180) ─── */
+  const dismissAlert = async (notifId, watchlistId) => {
+    const token = localStorage.getItem(APP_META.storageKeys.token);
+    setNotifications(prev => prev.filter(n => n.id !== notifId));
+    try { await fetch(API_BASE + '/notifications/' + notifId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } }); } catch(e) {}
+    if (watchlistId) {
+      try { await fetch(API_BASE + '/watchlist/' + watchlistId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } }); await loadWatchlist(); } catch(e) {}
+    }
+  };
+
+  const keepAlert = async (notifId, watchlistId, notifName) => {
+    const token = localStorage.getItem(APP_META.storageKeys.token);
+    setNotifications(prev => prev.filter(n => n.id !== notifId));
+    var isTest = String(notifId).indexOf('test-') === 0;
+    if (!isTest) {
+      try { await fetch(API_BASE + '/notifications/' + notifId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } }); } catch(e) {}
+    }
+    if (watchlistId) {
+      try {
+        const wItem = watchlist.find(w => w.id === watchlistId);
+        const itemName = (wItem && wItem.name) || notifName || '';
+        if (!isTest) {
+          await fetch(API_BASE + '/watchlist/' + watchlistId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        }
+        if (itemName) {
+          const alreadyIn = isOnWatchlist(itemName);
+          if (alreadyIn !== 'memories') {
+            await fetch(API_BASE + '/watchlist', {
+              method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+              body: JSON.stringify({ name: itemName, location: (wItem && wItem.location) || '', dob: (wItem && wItem.dob) || '', is_deceased: true, death_year: (wItem && wItem.death_year) || null })
+            });
+          }
+        }
+        await loadWatchlist();
+        setPage('memories');
+      } catch(e) { console.log('keepAlert error:', e); }
+    }
+  };
+
+  const dismissAlert2 = async (notifId, watchlistId) => {
+    var isTest = String(notifId).indexOf('test-') === 0;
+    const token = localStorage.getItem(APP_META.storageKeys.token);
+    setNotifications(prev => prev.filter(n => n.id !== notifId));
+    if (!isTest) {
+      try { await fetch(API_BASE + '/notifications/' + notifId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } }); } catch(e) {}
+      if (watchlistId) {
+        try { await fetch(API_BASE + '/watchlist/' + watchlistId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } }); await loadWatchlist(); } catch(e) {}
+      }
+    }
+  };
+
+  const viewAlert = (n) => {
+    const wItem = watchlist.find(w => w.id === n.watchlist_id);
+    if (wItem) { openWatchlistDrawer(wItem); }
+    else { openWatchlistDrawer({ name: n.name, id: n.watchlist_id }); }
+  };
+
+  const injectTestAlert = () => {
+    const target = watchlist.find(w => !(w.is_deceased === true || w.is_deceased === 1));
+    if (!target) { alert(COPY.alertsNeedWatchlist); return; }
+    const fakeNotif = {
+      id: 'test-' + Date.now(),
+      name: target.name,
+      watchlist_id: target.id,
+      message: COPY.alertsTestInjectMsg,
+      created_at: new Date().toISOString()
+    };
+    setNotifications(prev => [fakeNotif].concat(prev));
+    setPage('notifications');
+  };
+
+  /* ─── Auth ─── */
+  const doAuth = async (authMode) => {
+    if (!email || !password) return;
+    setLoading(true); setBackendWaking(false);
+    const wakeTimer = setTimeout(() => setBackendWaking(true), 3000);
+    try {
+      const endpoint = authMode === 'register' ? 'register' : 'login';
+      const r = await fetch(API_BASE + '/auth/' + endpoint, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      clearTimeout(wakeTimer); setBackendWaking(false);
+      if (!r.ok) { const err = await r.json(); throw new Error(err.detail || 'Auth failed'); }
+      const data = await r.json();
+      localStorage.setItem(APP_META.storageKeys.token, data.access_token);
+      const u = { email, id: '123', name: email.split('@')[0] };
+      localStorage.setItem(APP_META.storageKeys.user, JSON.stringify(u));
+      setUser(u); setAuth(true); setPage('search');
+      loadWatchlist(); loadNotifications();
+    } catch (error) { clearTimeout(wakeTimer); setBackendWaking(false); alert(COPY.format(COPY.errorGeneric, { msg: error.message })); }
+    finally { setLoading(false); }
+  };
+
+  const doLogout = () => {
+    localStorage.removeItem(APP_META.storageKeys.token);
+    localStorage.removeItem(APP_META.storageKeys.user);
+    setAuth(false); setUser(null); setWatchlist([]); setNotifications([]);
+    setResults([]); setWikiProfile(null); setWatchlistCheck(null);
+    setWatchlistChecked(false); setSearched(false); setPage('login');
+  };
+
+  const doDeleteAccount = async () => {
+    try {
+      const token = localStorage.getItem(APP_META.storageKeys.token);
+      const r = await fetch(API_BASE + '/account', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      if (!r.ok) throw new Error('Failed');
+      doLogout(); alert(COPY.deleteSuccess);
+    } catch (error) { alert(COPY.format(COPY.errorGeneric, { msg: error.message })); }
+  };
+
+  const clearSearch = () => { setWikiProfile(null); setResults([]); setSearched(false); setSelectedDisambig(null); };
+
+  const clearWatchlistCheck = () => {
+    setWatchlistCheck(null); setWatchlistChecked(false);
+    setNw({ name: '', middle: '', suffix: '', location: '', birthYear: '' });
+    setShowMoreFields(false);
+    setSelectedDisambig(null); setSsdiPage(1); setSsdiDrawer(null);
+  };
+
+  /* ─── Watchlist open/refresh drawer ─── */
+  const openWatchlistDrawer = async (watchItem) => {
+    const isMemory = watchItem.is_deceased === true || watchItem.is_deceased === 1;
+    setDrawerData({ name: watchItem.name, watchlistId: watchItem.id, profile: null, ssdiResults: [], loading: true, newlyDeceased: false, isMemory: isMemory, deathYear: watchItem.death_year || null, dob: watchItem.dob || null, cachedSsdi: null, location: watchItem.location || null });
+    setSsdiOffset(0); setSsdiHasMore(false); setSsdiAllResults([]);
+    setDrawerRefreshing(true);
+    const token = localStorage.getItem(APP_META.storageKeys.token);
+    if (!isMemory) {
+      fetch(API_BASE + '/watchlist/' + watchItem.id + '/refresh', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(r => { if (r.ok) r.json().then(data => { if (data.newly_deceased) { loadWatchlist(); loadNotifications(); } else { loadWatchlist(); } }); })
+        .catch(() => {});
+    }
+    const nameWithPeriods = addInitialPeriods(watchItem.name.trim());
+    if (isMemory) {
+      const profile = await Wiki.fetchAction(nameWithPeriods).catch(() => ({ notFound: true }));
+      const cachedSsdi = Ssdi.getCachedFlexible(watchItem.name);
+      setDrawerData({ name: watchItem.name, watchlistId: watchItem.id, profile: profile || { notFound: true }, ssdiResults: [], loading: false, newlyDeceased: false, isMemory: true, deathYear: watchItem.death_year || null, dob: watchItem.dob || null, cachedSsdi: cachedSsdi, location: watchItem.location || null });
+      setDrawerRefreshing(false);
+      return;
+    }
+    const wikiProfile = await Wiki.fetchAction(nameWithPeriods).catch(() => ({ notFound: true })) || { notFound: true };
+    var ssdiResults = [];
+    if (APP_META.modules.ssdi && watchItem.dob) {
+      var nameParts2 = watchItem.name.trim().split(/\s+/);
+      var drawerFirst2 = nameParts2[0] || '';
+      var drawerLast2 = nameParts2[nameParts2.length - 1] || '';
+      var ssdiSearchName2 = drawerFirst2 === drawerLast2 ? drawerFirst2 : (drawerFirst2 + ' ' + drawerLast2).trim();
+      var drawerMI2 = nameParts2.length >= 3 ? nameParts2.slice(1, -1).join(' ') : '';
+      var searchParams = { name: ssdiSearchName2, offset: 0 };
+      if (drawerMI2) searchParams.middle_name = drawerMI2;
+      const ssdiResp2 = await Ssdi.search(searchParams);
+      ssdiResults = (ssdiResp2.results || []).slice().sort((a, b) => parseBirthYear(a.birth_date) - parseBirthYear(b.birth_date));
+      setSsdiHasMore(ssdiResp2.has_more || false);
+      setSsdiOffset(ssdiResults.length);
+    }
+    setSsdiAllResults(ssdiResults);
+    setDrawerData({ name: watchItem.name, watchlistId: watchItem.id, profile: wikiProfile, ssdiResults, loading: false, newlyDeceased: false, isMemory: false, deathYear: null, dob: watchItem.dob || null, cachedSsdi: null, location: watchItem.location || null });
+    setDrawerRefreshing(false);
+  };
+
+  const loadMoreSsdi = async (watchItemName) => {
+    setSsdiLoadingMore(true);
+    try {
+      const data = await Ssdi.search({ name: watchItemName, offset: ssdiOffset });
+      const newResults = data.results || [];
+      const combined = ssdiAllResults.concat(newResults).slice().sort((a, b) => parseBirthYear(a.birth_date) - parseBirthYear(b.birth_date));
+      setSsdiAllResults(combined); setSsdiHasMore(data.has_more || false); setSsdiOffset(combined.length);
+      setDrawerData(prev => Object.assign({}, prev, { ssdiResults: combined }));
+    } catch(e) { console.log('loadMoreSsdi error:', e); }
+    setSsdiLoadingMore(false);
+  };
+
+  const loadMoreSsdiSearch = async () => {
+    if (!watchlistCheck) return;
+    setSsdiLoadingMore(true);
+    try {
+      const firstName = (nw.name || '').trim().split(/\s+/)[0];
+      const lastName = (nw.name || '').trim().split(/\s+/).slice(-1)[0];
+      const ssdiName = firstName === lastName ? firstName : (firstName + ' ' + lastName).trim();
+      const params = { name: ssdiName };
+      if (nw.birthYear) params.birth_year = nw.birthYear;
+      params.offset = String(watchlistCheck.ssdiResults.length);
+      const data = await Ssdi.search(params);
+      const scored = (data.results || []).map(function(rec) {
+        return Object.assign({}, rec, { _score: scoreResult(rec, firstName, nw.middle, lastName, nw.birthYear, nw.suffix) });
+      });
+      const combined = watchlistCheck.ssdiResults.concat(scored).slice().sort((a, b) => {
+        if (b._score !== a._score) return b._score - a._score;
+        return parseBirthYear(a.birth_date) - parseBirthYear(b.birth_date);
+      });
+      setWatchlistCheck(Object.assign({}, watchlistCheck, { ssdiResults: combined, ssdiHasMore: data.has_more || false }));
+      setSsdiPage(function(p) { return p + 1; });
+    } catch(e) { console.log('loadMoreSsdiSearch error:', e); }
+    setSsdiLoadingMore(false);
+  };
+
+  const addFromSsdi = async (r, forceMemories) => {
+    const fullName = r.name;
+    var alreadyIn = isOnWatchlist(fullName);
+    if (alreadyIn) { alert(COPY.format(COPY.alreadyInList, { name: fullName, list: alreadyIn })); return; }
+    setLoading(true);
+    try {
+      const token = localStorage.getItem(APP_META.storageKeys.token);
+      const birthYear = extractYear(r.birth_date) || '';
+      const birthYearInt = birthYear ? parseInt(birthYear) : null;
+      const isDeceased = forceMemories || !!(r.death_date) || (birthYearInt && birthYearInt < DECEASED_BIRTH_YEAR_THRESHOLD);
+      const deathYear = extractYear(r.death_date) || null;
+      Ssdi.cacheRecord(fullName, r);
+      const resp = await fetch(API_BASE + '/watchlist', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ name: fullName, location: nw.location || '', dob: birthYear, is_deceased: isDeceased, death_year: deathYear })
+      });
+      if (!resp.ok) throw new Error('Failed');
+      await loadWatchlist(); clearWatchlistCheck(); setSsdiDrawer(null);
+      setPage(isDeceased ? 'memories' : 'watchlist');
+    } catch(e) { alert(COPY.format(COPY.errorGeneric, { msg: e.message })); }
+    finally { setLoading(false); }
+  };
+
+  const isOnWatchlist = (name) => {
+    if (!name) return false;
+    try {
+      const nameLower = name.trim().toLowerCase();
+      const exactMatch = watchlist.find(w => w && w.name && w.name.trim().toLowerCase() === nameLower);
+      if (exactMatch) return (exactMatch.is_deceased === true || exactMatch.is_deceased === 1) ? 'memories' : 'watchlist';
+      const nameParts = nameLower.split(/\s+/);
+      const hasMiddle = nameParts.length > 2;
+      if (hasMiddle) return false;
+      const normalized = normalizeForWiki(name).toLowerCase();
+      const found = watchlist.find(w => {
+        if (!w || !w.name) return false;
+        const storedParts = w.name.trim().toLowerCase().split(/\s+/);
+        if (storedParts.length > 2) return false;
+        const stored = normalizeForWiki(w.name).toLowerCase();
+        return stored === normalized;
+      });
+      if (!found) return false;
+      return (found.is_deceased === true || found.is_deceased === 1) ? 'memories' : 'watchlist';
+    } catch(e) { return false; }
+  };
+
+  const buildFullName = () => {
+    const nameWords = (nw.name || '').trim().split(' ').filter(Boolean);
+    const first = nameWords[0] || '';
+    const last = nameWords.length > 1 ? nameWords[nameWords.length - 1] : '';
+    const mid = (nw.middle || '').trim();
+    const suf = (nw.suffix || '').trim();
+    return [first, mid, last, suf].filter(Boolean).join(' ');
+  };
+
+  /* ─── Search orchestrator ─── */
+  const checkWatch = async () => {
+    if (document.activeElement) document.activeElement.blur();
+    const name = smartTitleCase((nw.name || '').trim().replace(/\s+/g, ' '));
+    if (!name || name.length < 2) { alert('Please enter a name to search.'); return; }
+    setSsdiDrawer(null); setSsdiPage(1);
+    setWatchlistChecking(true); setWatchlistCheck(null); setWatchlistChecked(false);
+    try {
+      const firstName = toTitleCase(nw.name.trim().split(/\s+/)[0]);
+      const lastName = toTitleCase(nw.name.trim().split(/\s+/).slice(-1)[0]);
+      const ssdiName = firstName === lastName ? firstName : (firstName + ' ' + lastName).trim();
+      const params = { name: ssdiName };
+      if (nw.birthYear) params.birth_year = nw.birthYear;
+      if (nw.middle) params.middle_name = nw.middle.trim();
+      var ssdiRaw = [];
+      var ssdiApiHasMore = false;
+      var birthYearFallback = false;
+      var noMiMatches = false;
+      var hasMi = !!(nw.middle && nw.middle.trim());
+      var hasDob = !!(nw.birthYear && nw.birthYear.trim());
+      const wikiResult = await Wiki.fetchProfile(name).catch(() => ({ isDisambiguation: false, notFound: true }));
+      const profile = wikiResult || { isDisambiguation: false, notFound: true };
+      const isWikiDeceased = !!(profile && profile.deathDate);
+      const titleHasQualifier = profile && profile.title && /\(.*\)/.test(profile.title);
+      if (APP_META.modules.ssdi && (!isWikiDeceased || titleHasQualifier)) {
+        const ssdiResp = await Ssdi.search(params);
+        ssdiRaw = ssdiResp.results || [];
+        ssdiApiHasMore = ssdiResp.has_more || false;
+        if (ssdiRaw.length === 0) {
+          if (hasMi && !hasDob) { noMiMatches = true; }
+        }
+      }
+      const ssdiResults = ssdiRaw.map(r => Object.assign({}, r, { _score: scoreResult(r, firstName, nw.middle, lastName, nw.birthYear, nw.suffix) })).sort((a, b) => {
+        if (b._score !== a._score) return b._score - a._score;
+        return parseBirthYear(a.birth_date) - parseBirthYear(b.birth_date);
+      });
+      if (ssdiResults.length === 1) ssdiResults[0]._score = 95;
+      setWatchlistCheck({ profile, name, ssdiResults, ssdiHasMore: ssdiApiHasMore, birthYearFallback, noMiMatches });
+      setWatchlistChecked(true);
+    } catch (error) {
+      setWatchlistCheck({ profile: { isDisambiguation: false, notFound: true }, name, ssdiResults: [], ssdiHasMore: false, birthYearFallback: false, noMiMatches: false });
+      setWatchlistChecked(true);
+    } finally { setWatchlistChecking(false); }
+  };
+
+  const confirmAddWatch = async () => {
+    if (!watchlistCheck) return;
+    const topSsdi = watchlistCheck.ssdiResults && watchlistCheck.ssdiResults[0];
+    const addName = topSsdi ? topSsdi.name : watchlistCheck.name;
+    const addDob = topSsdi && topSsdi.birth_date ? (extractYear(topSsdi.birth_date) || nw.birthYear) : nw.birthYear;
+    var alreadyIn = isOnWatchlist(addName);
+    if (alreadyIn) { alert(COPY.format(COPY.alreadyInList, { name: addName, list: alreadyIn })); return; }
+    const addDobInt = addDob ? parseInt(addDob) : null;
+    const isLikelyDeceased = !!(topSsdi && topSsdi.death_date) || (addDobInt && addDobInt < DECEASED_BIRTH_YEAR_THRESHOLD);
+    if (topSsdi) Ssdi.cacheRecord(addName, topSsdi);
+    setLoadingWl(true);
+    try {
+      const token = localStorage.getItem(APP_META.storageKeys.token);
+      const deathYr = topSsdi && topSsdi.death_date ? extractYear(topSsdi.death_date) : null;
+      const r = await fetch(API_BASE + '/watchlist', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ name: addName, location: nw.location, dob: addDob, is_deceased: isLikelyDeceased, death_year: deathYr })
+      });
+      if (!r.ok) throw new Error('Failed');
+      await loadWatchlist(); clearWatchlistCheck();
+      setPage(isLikelyDeceased ? 'memories' : 'watchlist');
+    } catch (error) { alert(COPY.format(COPY.errorGeneric, { msg: error.message })); }
+    finally { setLoadingWl(false); }
+  };
+
+  const addSearchedNameToWatchlist = async () => {
+    const fullName = buildFullName() || watchlistCheck.name;
+    var alreadyIn = isOnWatchlist(fullName);
+    if (alreadyIn) { alert(COPY.format(COPY.alreadyInList, { name: fullName, list: alreadyIn })); return; }
+    Ssdi.cacheRecord(fullName, { name: fullName, birth_date: nw.birthYear || null, middle_name: nw.middle || null, suffix: nw.suffix || null });
+    setLoadingWl(true);
+    try {
+      const token = localStorage.getItem(APP_META.storageKeys.token);
+      const r = await fetch(API_BASE + '/watchlist', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ name: fullName, location: nw.location, dob: nw.birthYear })
+      });
+      if (!r.ok) throw new Error('Failed');
+      await loadWatchlist(); clearWatchlistCheck(); setPage('watchlist');
+    } catch (error) { alert(COPY.format(COPY.errorGeneric, { msg: error.message })); }
+    finally { setLoadingWl(false); }
+  };
+
+  const saveSearchedNameToMemories = async () => {
+    const fullName = buildFullName() || (watchlistCheck && watchlistCheck.name) || '';
+    if (!fullName) return;
+    var alreadyIn = isOnWatchlist(fullName);
+    if (alreadyIn) { alert(COPY.format(COPY.alreadyInList, { name: fullName, list: alreadyIn })); return; }
+    const topSsdi = watchlistCheck && watchlistCheck.ssdiResults && watchlistCheck.ssdiResults[0];
+    if (topSsdi) { Ssdi.cacheRecord(fullName, topSsdi); } else { Ssdi.cacheRecord(fullName, { name: fullName, birth_date: nw.birthYear || null, middle_name: nw.middle || null, suffix: nw.suffix || null }); }
+    setLoadingMem(true);
+    try {
+      const token = localStorage.getItem(APP_META.storageKeys.token);
+      const profile = watchlistCheck && watchlistCheck.profile;
+      const isActuallyDeceased = !!(profile && profile.deathDate);
+      const deathYr = isActuallyDeceased && profile.deathDate ? extractYear(profile.deathDate) : null;
+      const r = await fetch(API_BASE + '/watchlist', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ name: fullName, location: nw.location, dob: nw.birthYear, is_deceased: true, death_year: deathYr })
+      });
+      if (!r.ok) throw new Error('Failed');
+      await loadWatchlist(); clearWatchlistCheck(); setPage('memories');
+    } catch (error) { alert(COPY.format(COPY.errorGeneric, { msg: error.message })); }
+    finally { setLoadingMem(false); }
+  };
+
+  const addWatchFromSearch = async (profileTitle) => {
+    var alreadyIn = isOnWatchlist(profileTitle);
+    if (alreadyIn) { alert(COPY.format(COPY.alreadyInList, { name: profileTitle, list: alreadyIn })); return; }
+    setLoading(true);
+    try {
+      const token = localStorage.getItem(APP_META.storageKeys.token);
+      const r = await fetch(API_BASE + '/watchlist', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ name: profileTitle, location: '', dob: '' })
+      });
+      if (!r.ok) throw new Error('Failed');
+      await loadWatchlist(); clearSearch(); setPage('watchlist');
+    } catch (error) { alert(COPY.format(COPY.errorGeneric, { msg: error.message })); }
+    finally { setLoading(false); }
+  };
+
+  const delWatch = async (id) => {
+    try {
+      const token = localStorage.getItem(APP_META.storageKeys.token);
+      const r = await fetch(API_BASE + '/watchlist/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      if (!r.ok) throw new Error('Failed');
+      await loadWatchlist();
+    } catch (error) { alert(COPY.format(COPY.errorGeneric, { msg: error.message })); }
+  };
+
+  const unreadCount = notifications.length;
+  const iClass = "w-full px-4 py-3 border border-purple-900/50 rounded-lg focus:ring-2 focus:ring-purple-500 text-xl bg-gray-900/60 text-white placeholder-gray-400";
+  const cardClass = "bg-black/35 rounded-2xl p-4 shadow-lg border border-purple-900/30 backdrop-blur-sm";
+  const containerClass = (page === 'about') ? 'w-full max-w-3xl mx-auto px-3' : 'w-full px-3';
+
+  const SingleProfileCard = ({ profile, showAddButton, onBack }) => {
+    if (!profile || !profile.title) return null;
+    const alreadyWatching = APP_META.modules.watchlist ? isOnWatchlist(profile.title) : false;
+    const isDisambig = profile.isDisambiguation;
+    return (
+      <div className="rounded-2xl overflow-hidden border border-purple-800 shadow-lg">
+        <div className={'px-5 py-3 text-center ' + (profile.deathDate ? 'bg-gray-800' : isDisambig ? 'bg-yellow-600' : 'bg-green-700')}>
+          <p className="text-white font-black text-3xl">{profile.title}</p>
+          <p className="text-white/80 text-xl">{profile.deathDate ? COPY.statusPassed : isDisambig ? COPY.statusMultiple : COPY.statusAliveShort}</p>
+          {onBack && <button onClick={onBack} className="text-white/60 text-sm underline mt-1">{COPY.actionBackToList}</button>}
+        </div>
+        <div className="bg-gray-900/70 p-4">
+          <div className="flex gap-3 items-start mb-3">
+            {profile.thumbnail ? <img src={profile.thumbnail} alt={profile.title} className="w-16 h-16 rounded-full object-cover border-2 border-purple-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-purple-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
+            <div className="flex-1">
+              <h2 className="text-white text-2xl font-bold mb-1">{profile.title}</h2>
+              {profile.birthDate && <p className="text-purple-300 text-xl font-bold">{COPY.labelDob}: {profile.birthDate}</p>}
+              {profile.deathDate && profile.deathDate !== 'deceased' && <p className="text-gray-300 text-xl font-bold">{COPY.labelDod}: {profile.deathDate}</p>}
+              {!isDisambig && <p className="text-purple-400 text-xl italic mt-1">{profile.description}</p>}
+            </div>
+          </div>
+          {!isDisambig && profile.extract && <p className="text-gray-100 text-xl leading-relaxed mb-3">{profile.extract}</p>}
+          {showAddButton && (
+            <div className="space-y-2 mb-2">
+              {!profile.deathDate && APP_META.modules.watchlist && (alreadyWatching
+                ? <p className="text-green-400 text-xl text-center font-bold">{COPY.format(COPY.alreadyInListGeneric, { list: alreadyWatching })}</p>
+                : <button onClick={() => addWatchFromSearch(profile.title)} disabled={loading} className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50"><PlusIcon /> {COPY.actionAddToWatchlist}</button>
+              )}
+              <button onClick={clearSearch} className="w-full py-3 bg-white/10 border border-white/20 text-white/80 rounded-xl text-xl text-center">{COPY.actionClearSearch}</button>
+            </div>
+          )}
+          <div className="p-2 bg-purple-900/20 border border-purple-800/20 rounded-xl">
+            <p className="text-gray-400 text-sm mb-1">{COPY.sourceCreditFooter}</p>
+            <p className="text-purple-200 text-sm">{COPY.wikiCredit}</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const SsdiRecordDrawer = () => {
+    if (!ssdiDrawer) return null;
+    const r = ssdiDrawer;
+    if (!r || !r.name) return null;
+    const alreadyWatching = APP_META.modules.watchlist ? isOnWatchlist(r.name) : false;
+    const ssdiByear = r.birth_date ? parseInt(extractYear(r.birth_date) || '0') : null;
+    const ssdiPassed = !!(r.death_date || (ssdiByear && ssdiByear < DECEASED_BIRTH_YEAR_THRESHOLD));
+    return (
+      <>
+        <div className="modal-overlay" onClick={() => setSsdiDrawer(null)} />
+        <div className="modal-drawer">
+          <div className="flex justify-between items-center px-4 pt-4 pb-2 border-b border-purple-900/30">
+            <h3 className="text-white font-bold text-xl">{r.name}</h3>
+            <button onClick={() => setSsdiDrawer(null)} className="text-gray-400 hover:text-white text-2xl font-bold">X</button>
+          </div>
+          <div className="p-4">
+            {ssdiPassed && (
+              <div className="px-4 py-3 rounded-xl mb-4 bg-gray-700 text-center">
+                <p className="text-white font-black text-3xl">{r.name}</p>
+                <p className="text-white/80 text-xl">{COPY.statusPassed}</p>
+              </div>
+            )}
+            <SsdiRecordBlock r={r} />
+            {(() => {
+              if (alreadyWatching === 'memories') return <p className="text-green-400 text-xl text-center font-bold mb-3">{COPY.memoriesAlreadyIn}</p>;
+              if (alreadyWatching === 'watchlist' && ssdiPassed && APP_META.modules.memories) return (
+                <div className="mb-3">
+                  <p className="text-yellow-300 text-xl text-center mb-2">This person is on your Watchlist but the SSDI record shows they have passed.</p>
+                  <button onClick={async () => {
+                    setLoading(true);
+                    try {
+                      const token = localStorage.getItem(APP_META.storageKeys.token);
+                      const found = watchlist.find(w => { const stored = normalizeForWiki(w.name).toLowerCase(); const check = normalizeForWiki(r.name).toLowerCase(); return stored === check || w.name.toLowerCase() === r.name.toLowerCase(); });
+                      if (found) await fetch(API_BASE + '/watchlist/' + found.id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+                      Ssdi.cacheRecord(r.name, r);
+                      await fetch(API_BASE + '/watchlist', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ name: r.name, location: nw.location || '', dob: extractYear(r.birth_date) || '', is_deceased: true, death_year: extractYear(r.death_date) }) });
+                      await loadWatchlist(); setSsdiDrawer(null); setPage('memories');
+                    } catch(e) { alert(COPY.format(COPY.errorGeneric, { msg: e.message })); }
+                    finally { setLoading(false); }
+                  }} disabled={loading} className="w-full py-4 bg-gray-700 hover:bg-gray-600 border border-gray-500 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50">
+                    <PlusIcon /> {loading ? COPY.actionSavingMemories : COPY.actionSaveAsMemory}
+                  </button>
+                </div>
+              );
+              if (alreadyWatching) return <p className="text-green-400 text-xl text-center font-bold mb-3">{COPY.format(COPY.alreadyInListGeneric, { list: alreadyWatching })}</p>;
+              if (ssdiPassed && APP_META.modules.memories) return (
+                <button onClick={() => addFromSsdi(r, true)} disabled={loading} className="w-full py-4 bg-gray-700 hover:bg-gray-600 border border-gray-500 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 mb-3 disabled:opacity-50">
+                  <PlusIcon /> {loading ? COPY.actionSavingMemories : COPY.actionSaveToMemories}
+                </button>
+              );
+              if (APP_META.modules.watchlist) return (
+                <button onClick={() => addFromSsdi(r, false)} disabled={loading} className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 mb-3 disabled:opacity-50">
+                  <PlusIcon /> {loading ? COPY.actionAddingWatchlist : COPY.actionAddToWatchlist}
+                </button>
+              );
+              return null;
+            })()}
+            <button onClick={() => setSsdiDrawer(null)} className="w-full py-4 bg-purple-900/40 border border-purple-800/50 text-white rounded-xl text-xl">{COPY.actionClose}</button>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  const SSIDResultsBlock = ({ ssdiResults, searchFirst, searchMiddle, searchLast, searchBirthYear, searchSuffix, apiHasMore, onLoadMore, birthYearFallback }) => {
+    if (!ssdiResults || ssdiResults.length === 0) return null;
+    const tooMany = ssdiResults.length >= 10 && !searchMiddle && !searchBirthYear;
+    const visibleResults = ssdiResults.slice(0, ssdiPage * 10, 20);
+    const clientHasMore = ssdiResults.length > visibleResults.length && visibleResults.length < 20;
+    const showMoreBtn = () => (clientHasMore || apiHasMore) ? (
+      <button onClick={() => { if (clientHasMore) setSsdiPage(p => p + 1); else if (onLoadMore) onLoadMore(); }} disabled={ssdiLoadingMore}
+        className="w-full py-3 bg-gray-700 border border-purple-800/50 text-white rounded-xl text-2xl font-bold mt-1 mb-1">
+        {ssdiLoadingMore ? COPY.ssdiLoading : COPY.ssdiShowMore}
+      </button>
+    ) : null;
+    return (
+      <div className="mb-3 p-3 bg-gray-800/60 rounded-xl border border-purple-900/30">
+        <p className="text-purple-300 text-2xl font-bold mb-2">{COPY.ssdiHeader}</p>
+        {birthYearFallback && searchBirthYear && <div className="mb-2 p-2 bg-yellow-900/30 border border-yellow-700/40 rounded-lg"><p className="text-yellow-300 text-sm">{COPY.ssdiYearFallback}</p></div>}
+        {tooMany && <div className="mb-2 p-2 bg-yellow-900/30 border border-yellow-700/40 rounded-lg"><p className="text-yellow-300 text-sm">{COPY.ssdiManyMatches}</p></div>}
+        {showMoreBtn()}
+        {visibleResults.map((r, i) => {
+          const score = r._score !== undefined ? r._score : 50;
+          const conf = confidenceLabel(score);
+          const confColor = conf === COPY.confidenceProbable ? 'text-green-400' : conf === COPY.confidencePotential ? 'text-yellow-400' : 'text-gray-400';
+          return (
+            <div key={i} onClick={() => setSsdiDrawer(r)} className="mb-2 pb-2 border-b border-white/10 last:border-0 cursor-pointer hover:bg-white/5 rounded px-1 transition-colors">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-2xl font-semibold underline decoration-dotted">{r.name}</p>
+                  {r.middle_name && <p className="text-gray-400 text-sm">{COPY.labelMiddle}: {r.middle_name}</p>}
+                </div>
+                <span className={'text-base font-bold ml-2 shrink-0 ' + confColor}>{conf}</span>
+              </div>
+              {r.birth_date && <p className="text-gray-400 text-sm">{COPY.labelDob}: {r.birth_date}</p>}
+              {r.death_date ? <p className="text-white text-sm font-semibold">{COPY.labelDod}: {r.death_date}</p> : <p className="text-gray-600 text-xl italic">{COPY.ssdiNoMatch}</p>}
+              {r.state && <p className="text-gray-400 text-sm">{COPY.labelState}: {r.state}</p>}
+            </div>
+          );
+        })}
+        {showMoreBtn()}
+      </div>
+    );
+  };
+
+  const WatchlistCheckCard = () => {
+    if (!watchlistCheck) return null;
+    const { profile: rawProfile, name, ssdiResults: rawSsdi } = watchlistCheck;
+    var noMiMatches = watchlistCheck.noMiMatches || false;
+    const ssdiResults = rawSsdi || [];
+    const searchFirst = (nw.name || '').trim().split(/\s+/)[0] || '';
+    const searchLast = (nw.name || '').trim().split(/\s+/).slice(-1)[0] || '';
+    var fullNameStatus = APP_META.modules.watchlist ? isOnWatchlist(buildFullName()) : false;
+    const profile = rawProfile ? {
+      isDisambiguation: rawProfile.isDisambiguation || false,
+      notFound: rawProfile.notFound || false,
+      title: rawProfile.title || '',
+      extract: rawProfile.extract || '',
+      birthDate: rawProfile.birthDate || null,
+      deathDate: rawProfile.deathDate || null,
+      description: rawProfile.description || '',
+      thumbnail: rawProfile.thumbnail || null,
+      matches: Array.isArray(rawProfile.matches) ? rawProfile.matches : [],
+    } : { isDisambiguation: false, notFound: true, title: '', extract: '', matches: [] };
+
+    const wikiMatchConfident = (() => {
+      if (!profile || profile.notFound || profile.isDisambiguation || !profile.title) return false;
+      if (/\(.*\)/.test(profile.title)) return false;
+      const titleWords = profile.title.toLowerCase().split(/\s+/);
+      const titleFirst = titleWords[0] || '';
+      const titleLast = titleWords[titleWords.length - 1] || '';
+      const firstMatch = searchFirst.toLowerCase() === titleFirst.toLowerCase() || (searchFirst.length >= 5 && titleFirst.toLowerCase().startsWith(searchFirst.toLowerCase()));
+      if (!firstMatch) return false;
+      if (!fuzzyMatch(searchLast, titleLast)) return false;
+      if (nw.middle) {
+        const mid = nw.middle.trim().toLowerCase().replace(/\./g, '');
+        const titleLower = profile.title.toLowerCase();
+        if (mid.length > 0 && !titleLower.includes(' ' + mid.charAt(0)) && !titleLower.includes(mid)) return false;
+      }
+      if (nw.birthYear && profile.birthDate && !profile.birthDate.includes(nw.birthYear)) return false;
+      return true;
+    })();
+
+    const topSsdiResult = ssdiResults && ssdiResults[0];
+    const ssdiDeceased = !!(topSsdiResult && topSsdiResult.death_date) ||
+      !!(topSsdiResult && topSsdiResult.birth_date && parseInt(extractYear(topSsdiResult.birth_date)||'0') > 0 && parseInt(extractYear(topSsdiResult.birth_date)||'0') < DECEASED_BIRTH_YEAR_THRESHOLD);
+    const isDeceased = (profile && profile.deathDate) || (ssdiDeceased && !wikiMatchConfident);
+    const isWikiDeceased = !!(profile && profile.deathDate);
+    const notFound = !profile || profile.notFound === true || (!profile.title && !profile.extract);
+    const hasSSdi = ssdiResults && ssdiResults.length > 0;
+    const showWikiBio = (!notFound) && (wikiMatchConfident || isDeceased);
+    const showBanner = showWikiBio || (!hasSSdi && notFound);
+    const bannerBg = isDeceased ? 'bg-gray-800' : (!notFound && wikiMatchConfident ? 'bg-green-700' : 'bg-blue-700');
+    const bannerText = isDeceased ? COPY.statusPassed : (!notFound && wikiMatchConfident ? COPY.statusAliveLong : COPY.statusNotFound);
+
+    if (profile && profile.isDisambiguation === true) {
+      if (selectedDisambig) {
+        const selDeceased = selectedDisambig.deathDate;
+        const selStatus = APP_META.modules.watchlist ? isOnWatchlist(selectedDisambig.title) : false;
+        return (
+          <div className="rounded-2xl overflow-hidden border border-purple-800 shadow-lg">
+            <div className={'px-5 py-3 text-center ' + (selDeceased ? 'bg-gray-800' : 'bg-green-700')}>
+              <p className="text-white font-black text-3xl">{selectedDisambig.title}</p>
+              <p className="text-white/80 text-xl">{selDeceased ? COPY.statusPassed : COPY.statusAliveShort}</p>
+            </div>
+            <div className="bg-gray-900/70 p-4">
+              <div className="flex gap-3 items-start mb-3">
+                {selectedDisambig.thumbnail ? <img src={selectedDisambig.thumbnail} alt={selectedDisambig.title} className="w-16 h-16 rounded-full object-cover border-2 border-purple-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-purple-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
+                <div className="flex-1">
+                  <h2 className="text-white text-2xl font-bold mb-1">{selectedDisambig.title}</h2>
+                  {selectedDisambig.birthDate && <p className="text-purple-300 text-xl font-bold">{COPY.labelDob}: {selectedDisambig.birthDate}</p>}
+                  {selDeceased && selectedDisambig.deathDate && selectedDisambig.deathDate !== 'deceased' && <p className="text-gray-300 text-xl font-bold">{COPY.labelDod}: {selectedDisambig.deathDate}</p>}
+                  <p className="text-purple-400 text-xl italic mt-1">{selectedDisambig.description}</p>
+                </div>
+              </div>
+              {selectedDisambig.extract && <p className="text-gray-100 text-xl leading-relaxed mb-3">{selectedDisambig.extract}</p>}
+              <div className="space-y-2 mt-2">
+                {selStatus ? (
+                  <p className="text-green-400 text-xl text-center font-bold">{COPY.format(COPY.alreadyInListGeneric, { list: selStatus })}</p>
+                ) : selDeceased && APP_META.modules.memories ? (
+                  <button onClick={async () => {
+                    setLoadingMem(true);
+                    try {
+                      const token = localStorage.getItem(APP_META.storageKeys.token);
+                      const r = await fetch(API_BASE + '/watchlist', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ name: selectedDisambig.title, location: '', dob: selectedDisambig.birthDate ? extractYear(selectedDisambig.birthDate) : '', is_deceased: true, death_year: extractYear(selectedDisambig.deathDate) }) });
+                      if (!r.ok) throw new Error('Failed');
+                      await loadWatchlist(); clearWatchlistCheck(); setPage('memories');
+                    } catch(e) { alert(COPY.format(COPY.errorGeneric, { msg: e.message })); }
+                    finally { setLoadingMem(false); }
+                  }} disabled={loadingMem} className="w-full py-4 bg-gray-700 hover:bg-gray-600 border border-gray-500 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50">
+                    <PlusIcon /> {loadingMem ? COPY.actionSavingMemories : COPY.format(COPY.actionSaveMemoryTempl, { name: selectedDisambig.title })}
+                  </button>
+                ) : APP_META.modules.watchlist ? (
+                  <button onClick={async () => {
+                    setLoadingWl(true);
+                    try {
+                      const token = localStorage.getItem(APP_META.storageKeys.token);
+                      const r = await fetch(API_BASE + '/watchlist', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ name: selectedDisambig.title, location: '', dob: selectedDisambig.birthDate ? extractYear(selectedDisambig.birthDate) : '' }) });
+                      if (!r.ok) throw new Error('Failed');
+                      await loadWatchlist(); clearWatchlistCheck(); setPage('watchlist');
+                    } catch(e) { alert(COPY.format(COPY.errorGeneric, { msg: e.message })); }
+                    finally { setLoadingWl(false); }
+                  }} disabled={loadingWl} className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50">
+                    <PlusIcon /> {loadingWl ? COPY.actionAddingWatchlist : COPY.format(COPY.actionAddWatchTempl, { name: selectedDisambig.title })}
+                  </button>
+                ) : null}
+                <button onClick={() => setSelectedDisambig(null)} className="w-full py-3 bg-white/10 border border-white/20 text-white/80 rounded-xl text-xl text-center flex items-center justify-center gap-2"><EditIcon /> {COPY.actionBackToList}</button>
+                <button onClick={() => { setWatchlistChecked(false); setWatchlistCheck(null); setSelectedDisambig(null); setSsdiPage(1); window.scrollTo(0,0); }} className="w-full py-3 bg-white/10 border border-white/20 text-white/80 rounded-xl text-xl text-center flex items-center justify-center gap-2"><EditIcon /> {COPY.actionEditName}</button>
+                <button onClick={clearWatchlistCheck} className="w-full py-2 text-white/40 text-xl text-center">{COPY.actionSearchAnother}</button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="rounded-2xl overflow-hidden border border-purple-800 shadow-lg">
+          {(() => {
+              const miF = (nw.middle || '').trim().toLowerCase().replace(/\./g, '');
+              const fM = miF ? (profile.matches || []).filter(m => m.title && m.title.toLowerCase().includes(' ' + miF.charAt(0))) : (profile.matches || []);
+              const noResults = fM.length === 0 && ssdiResults.length === 0;
+              return noResults ? (
+                <div className="px-5 py-3 bg-blue-700 text-center"><p className="text-white font-black text-3xl">{COPY.statusNoMatches}</p><p className="text-white/80 text-xl">{COPY.statusNoMatchesSub}</p></div>
+              ) : (
+                <div className="px-5 py-3 bg-yellow-600 text-center"><p className="text-white font-black text-3xl">{COPY.statusMultiple}</p><p className="text-white/80 text-xl">Tap a name to select them, or refine your search below.</p></div>
+              );
+            })()}
+          <div className="bg-gray-900/70 p-4">
+            {(() => {
+              const miFilter = (nw.middle || '').trim().toLowerCase().replace(/\./g, '');
+              const filteredMatches = miFilter
+                ? (profile.matches || []).filter(m => m.title && m.title.toLowerCase().includes(' ' + miFilter.charAt(0)))
+                : (profile.matches || []);
+              return filteredMatches.length > 0 ? (
+                <div className="space-y-2 mb-3">
+                  {filteredMatches.map((m, i) => (
+                    <button key={i} onClick={() => setSelectedDisambig(m)} className="w-full p-3 bg-gray-800/60 border border-purple-900/30 rounded-xl text-left">
+                      <div className="flex items-center gap-3">
+                        {m.thumbnail ? <img src={m.thumbnail} alt={m.title} className="w-10 h-10 rounded-full object-cover border border-purple-600/40 shrink-0" /> : <div className="w-10 h-10 rounded-full bg-purple-900/40 flex items-center justify-center shrink-0 text-lg">?</div>}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-2xl font-bold truncate">{m.title}</p>
+                          <p className="text-purple-400 text-xl italic truncate">{m.description}</p>
+                        </div>
+                        <span className={'px-2 py-0.5 rounded-full text-xl font-bold ' + (m.deathDate ? 'bg-gray-700 text-gray-300' : 'bg-green-800 text-green-300')}>{m.deathDate ? COPY.statusPassed : COPY.statusAliveShort}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : miFilter ? (
+                <div className="mb-3 p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
+                  <p className="text-yellow-300 text-sm font-bold">{COPY.noWikiWithInitial}</p>
+                  <p className="text-yellow-200 text-xs mt-1">{COPY.showingSsdiBelow}</p>
+                </div>
+              ) : (
+                <p className="text-gray-400 text-xl text-center py-3 mb-2">{COPY.noWikiMatchesHint}</p>
+              );
+            })()}
+            <SSIDResultsBlock ssdiResults={ssdiResults} searchFirst={searchFirst} searchMiddle={nw.middle} searchLast={searchLast} searchBirthYear={nw.birthYear} searchSuffix={nw.suffix} apiHasMore={watchlistCheck && watchlistCheck.ssdiHasMore} onLoadMore={loadMoreSsdiSearch} birthYearFallback={watchlistCheck && watchlistCheck.birthYearFallback} />
+            {ssdiResults.length === 0 && (nw.middle || nw.birthYear) && <div className="mb-3 p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg"><p className="text-yellow-300 text-sm font-bold">No exact SSDI matches found.</p><p className="text-yellow-200 text-xs mt-1">They may have passed after 2014, or try different details.</p></div>}
+            {nw.birthYear && <div className="mb-2 p-2 bg-gray-800/40 border border-gray-700/30 rounded-lg"><p className="text-gray-400 text-xs">{COPY.ssdiYearWikiNote}</p></div>}
+            <div className="space-y-2 mt-3">
+              <button onClick={() => { setWatchlistChecked(false); setWatchlistCheck(null); setSelectedDisambig(null); setSsdiPage(1); window.scrollTo(0,0); }} className="w-full py-3 bg-white/10 border border-white/20 text-white/80 rounded-xl text-xl text-center flex items-center justify-center gap-2"><EditIcon /> {COPY.actionEditName}</button>
+              <button onClick={clearWatchlistCheck} className="w-full py-3 bg-white/10 border border-white/20 text-white/80 rounded-xl text-xl text-center">{COPY.actionSearchAnother}</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-2xl overflow-hidden border border-purple-800 shadow-lg">
+        {showBanner && <div className={'px-5 py-3 text-center ' + bannerBg}>
+          {profile && profile.title && <p className="text-white font-black text-3xl">{profile.title}</p>}
+          <p className="text-white/80 text-xl">{bannerText}</p>
+        </div>}
+        <div className="bg-gray-900/70 p-4">
+          {showWikiBio && (
+            <>
+              <div className="flex gap-3 items-start mb-3">
+                {profile.thumbnail ? <img src={profile.thumbnail} alt={profile.title} className="w-16 h-16 rounded-full object-cover border-2 border-purple-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-purple-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
+                <div className="flex-1">
+                  <h2 className="text-white text-2xl font-bold mb-1">{profile.title}</h2>
+                  {profile.birthDate && <p className="text-purple-300 text-xl font-bold">{COPY.labelDob}: {profile.birthDate}</p>}
+                  {profile.deathDate && profile.deathDate !== 'deceased' && <p className="text-gray-300 text-xl font-bold">{COPY.labelDod}: {profile.deathDate}</p>}
+                  <p className="text-purple-400 text-xl italic mt-1">{profile.description}</p>
+                </div>
+              </div>
+              {profile.extract && <p className="text-gray-100 text-xl leading-relaxed mb-3">{profile.extract}</p>}
+            </>
+          )}
+          {!notFound && !wikiMatchConfident && !isDeceased && !nw.middle && (
+            <div className="mb-3 p-2 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
+              <p className="text-yellow-300 text-sm">{COPY.format(COPY.wikipediaLikelyMismatch, { title: profile.title })}</p>
+            </div>
+          )}
+          {!isWikiDeceased && noMiMatches && (
+            <div className="mb-3 p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
+              <p className="text-yellow-300 text-sm font-bold">{COPY.ssdiNoExactMi}</p>
+              <p className="text-yellow-200 text-xs mt-1">{COPY.ssdiNoExactHint}</p>
+            </div>
+          )}
+          {!notFound && !wikiMatchConfident && !isWikiDeceased && (nw.middle || nw.birthYear) && !hasSSdi && <div className="mb-3 p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg"><p className="text-yellow-300 text-sm font-bold">No exact SSDI matches for those details.</p><p className="text-yellow-200 text-xs mt-1">They may have passed after 2014, or try different details.</p></div>}
+          {(!wikiMatchConfident || isWikiDeceased) && <SSIDResultsBlock ssdiResults={ssdiResults} searchFirst={searchFirst} searchMiddle={nw.middle} searchLast={searchLast} searchBirthYear={nw.birthYear} searchSuffix={nw.suffix} apiHasMore={watchlistCheck && watchlistCheck.ssdiHasMore} onLoadMore={loadMoreSsdiSearch} birthYearFallback={watchlistCheck && watchlistCheck.birthYearFallback} />}
+          {ssdiDeceased && !isWikiDeceased && !wikiMatchConfident && APP_META.modules.memories && (
+            <div className="space-y-2 mt-2 border-t border-white/10 pt-2">
+              {fullNameStatus
+                ? <p className="w-full py-3 text-center text-green-400 text-2xl font-bold">{COPY.format(COPY.alreadyInListGeneric, { list: fullNameStatus })}</p>
+                : <button onClick={saveSearchedNameToMemories} disabled={loadingMem} className="w-full py-4 bg-gray-700 hover:bg-gray-600 border border-gray-500 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50">
+                    <PlusIcon /> {loadingMem ? COPY.actionSavingMemories : COPY.format(COPY.actionSaveMemoryTempl, { name: buildFullName() })}
+                  </button>
+              }
+              <button onClick={() => { setWatchlistChecked(false); setWatchlistCheck(null); setSelectedDisambig(null); setSsdiPage(1); window.scrollTo(0,0); }} className="w-full py-3 bg-white/10 border border-white/20 text-white/80 rounded-xl text-xl text-center flex items-center justify-center gap-2">
+                <EditIcon /> {COPY.actionEditName}
+              </button>
+              <button onClick={clearWatchlistCheck} className="w-full py-2 text-white/40 text-xl text-center">{COPY.actionSearchAnother}</button>
+            </div>
+          )}
+          {isWikiDeceased && (
+            <>
+              <div className="p-2 bg-gray-700/50 border border-gray-600/30 rounded-xl mb-3">
+                {!wikiMatchConfident && <SSIDResultsBlock ssdiResults={ssdiResults} searchFirst={searchFirst} searchMiddle={nw.middle} searchLast={searchLast} searchBirthYear={nw.birthYear} searchSuffix={nw.suffix} apiHasMore={watchlistCheck && watchlistCheck.ssdiHasMore} onLoadMore={loadMoreSsdiSearch} birthYearFallback={watchlistCheck && watchlistCheck.birthYearFallback} />}
+                <p className="text-gray-200 text-xl text-center">This person has passed away.{profile.deathDate && profile.deathDate !== 'deceased' ? ' ' + COPY.labelDod + ': ' + profile.deathDate : ''}</p>
+              </div>
+              <div className="space-y-2 mt-2">
+                {profile && profile.title && APP_META.modules.memories && (() => {
+                  var titleStatus = isOnWatchlist(profile.title);
+                  if (titleStatus) return <p className="text-green-400 text-xl text-center font-bold">{COPY.format(COPY.alreadyInListGeneric, { list: titleStatus })}</p>;
+                  return (
+                    <button onClick={async () => {
+                      setLoadingMem(true);
+                      try {
+                        const token = localStorage.getItem(APP_META.storageKeys.token);
+                        const r = await fetch(API_BASE + '/watchlist', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ name: profile.title, location: '', dob: '', is_deceased: true, death_year: extractYear(profile.deathDate) }) });
+                        if (!r.ok) throw new Error('Failed');
+                        await loadWatchlist(); clearWatchlistCheck(); setPage('memories');
+                      } catch(e) { alert(COPY.format(COPY.errorGeneric, { msg: e.message })); }
+                      finally { setLoadingMem(false); }
+                    }} disabled={loadingMem} className="w-full py-4 bg-gray-700 hover:bg-gray-600 border border-gray-500 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50">
+                      <PlusIcon /> {loadingMem ? COPY.actionSavingMemories : COPY.format(COPY.actionSaveMemoryTempl, { name: profile.title })}
+                    </button>
+                  );
+                })()}
+                <button onClick={() => { setWatchlistChecked(false); setWatchlistCheck(null); setSelectedDisambig(null); setSsdiPage(1); window.scrollTo(0,0); }} className="w-full py-3 bg-white/10 border border-white/20 text-white/80 rounded-xl text-xl text-center flex items-center justify-center gap-2">
+                  <EditIcon /> {COPY.actionEditName}
+                </button>
+                <button onClick={clearWatchlistCheck} className="w-full py-3 bg-white/10 border border-white/20 text-white/80 rounded-xl text-xl text-center">{COPY.actionSearchAnother}</button>
+              </div>
+            </>
+          )}
+          {!isDeceased && (
+            <div className="space-y-2 mt-2 border-t border-white/10 pt-2">
+              {hasSSdi && <p className="text-gray-400 text-xl text-center font-bold">Tap a name above to select them.</p>}
+              {wikiMatchConfident && !notFound && !isWikiDeceased && APP_META.modules.watchlist && (
+                fullNameStatus
+                  ? <p className="w-full py-3 text-center text-green-400 text-2xl font-bold">{COPY.format(COPY.alreadyInListGeneric, { list: fullNameStatus })}</p>
+                  : <button onClick={addSearchedNameToWatchlist} disabled={loadingWl} className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50"><PlusIcon /> {loadingWl ? COPY.actionAddingWatchlist : COPY.format(COPY.actionAddWatchTempl, { name: buildFullName() })}</button>
+              )}
+              {!hasSSdi && notFound && (
+                <>
+                  {(nw.middle || nw.birthYear) ? (
+                    <div className="mb-3 p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
+                      <p className="text-yellow-300 text-sm font-bold">No exact matches found for {buildFullName()}.</p>
+                      <p className="text-yellow-200 text-xs mt-1">They may have passed after 2014, or try different details.</p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-300 text-lg leading-relaxed text-center">No records found for {buildFullName()} at this time. Try adding a middle initial or birth year.</p>
+                  )}
+                  {fullNameStatus
+                    ? <p className="w-full py-3 text-center text-green-400 text-2xl font-bold">{COPY.format(COPY.alreadyInListGeneric, { list: fullNameStatus })}</p>
+                    : <>
+                        {APP_META.modules.watchlist && <button onClick={addSearchedNameToWatchlist} disabled={loadingWl} className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-2xl flex items-center justify-center gap-2 disabled:opacity-50">
+                          <PlusIcon /> {loadingWl ? COPY.actionAddingWatchlist : COPY.format(COPY.actionAddWatchAnyway, { name: buildFullName() })}
+                        </button>}
+                        {APP_META.modules.memories && <button onClick={saveSearchedNameToMemories} disabled={loadingMem} className="w-full py-3 bg-gray-700/60 border border-gray-500/40 text-gray-200 rounded-xl text-xl flex items-center justify-center gap-2 disabled:opacity-50">
+                          <PlusIcon /> {loadingMem ? COPY.actionSavingMemories : COPY.actionSaveMemInstead}
+                        </button>}
+                      </>
+                  }
+                </>
+              )}
+              <button onClick={() => { setWatchlistChecked(false); setWatchlistCheck(null); setSelectedDisambig(null); setSsdiPage(1); window.scrollTo(0,0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; }} className="w-full py-3 bg-white/10 border border-white/20 text-white/80 rounded-xl text-xl text-center flex items-center justify-center gap-2">
+                <EditIcon /> {COPY.actionEditName}
+              </button>
+              <button onClick={clearWatchlistCheck} className="w-full py-2 text-white/40 text-xl text-center">{COPY.actionSearchAnother}</button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const WikiDrawer = () => {
+    if (!drawerData) return null;
+    const { name, profile, ssdiResults, loading: drawerLoading, newlyDeceased, isMemory, deathYear, dob, cachedSsdi, location } = drawerData;
+    const noWikiInfo = !drawerLoading && (!profile || profile.notFound || (!profile.title && !profile.extract));
+    const nameParts = name.trim().split(/\s+/);
+    const drawerFirst = nameParts[0] || '';
+    const drawerLast = nameParts[nameParts.length - 1] || '';
+    const drawerMI = nameParts.length >= 3 ? nameParts.slice(1, -1).join(' ') : '';
+    return (
+      <>
+        <div className="modal-overlay" onClick={() => setDrawerData(null)} />
+        <div className="modal-drawer">
+          <div className="flex justify-between items-center px-4 pt-4 pb-2 border-b border-purple-900/30">
+            <h3 className="text-white font-bold text-xl">{name}</h3>
+            <button onClick={() => setDrawerData(null)} className="text-gray-400 hover:text-white text-2xl font-bold">X</button>
+          </div>
+          <div className="p-4">
+            {drawerLoading && <div className="text-center py-8"><p className="text-white animate-pulse text-xl">{COPY.drawerChecking}</p></div>}
+            {!drawerLoading && (
+              <>
+                {isMemory && (
+                  <>
+                    <div className={'px-4 py-3 rounded-xl mb-3 text-center ' + (deathYear ? 'bg-gray-700' : 'bg-green-800')}>
+                      <p className="text-white font-black text-3xl">{name}</p>
+                      <p className="text-white/80 text-xl">{deathYear ? COPY.statusPassed : COPY.statusSaved}</p>
+                    </div>
+                    {(() => {
+                      var savedLower = name.trim().toLowerCase();
+                      var wikiLower = (profile && profile.title || '').trim().toLowerCase();
+                      var savedParts = savedLower.split(/\s+/);
+                      var wikiFirst = wikiLower.split(/\s+/)[0] || '';
+                      var wikiLast = wikiLower.split(/\s+/).slice(-1)[0] || '';
+                      var savedFirst = savedParts[0] || '';
+                      var savedLast = savedParts[savedParts.length - 1] || '';
+                      var wikiMatches = fuzzyMatch(savedFirst, wikiFirst) && fuzzyMatch(savedLast, wikiLast);
+                      if (!noWikiInfo && profile && profile.title && wikiMatches) {
+                        return (
+                          <>
+                            <div className="flex gap-3 items-start mb-3">
+                              {profile.thumbnail ? <img src={profile.thumbnail} alt={profile.title} className="w-16 h-16 rounded-full object-cover border-2 border-purple-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-purple-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
+                              <div className="flex-1">
+                                <h2 className="text-white text-2xl font-bold mb-1">{profile.title}</h2>
+                                {profile.birthDate && <p className="text-purple-300 text-xl font-bold">{COPY.labelDob}: {profile.birthDate}</p>}
+                                {deathYear && <p className="text-gray-300 text-xl font-bold">{COPY.labelDod}: {deathYear}</p>}
+                                {profile.description && <p className="text-purple-400 text-xl italic mt-1">{profile.description}</p>}
+                              </div>
+                            </div>
+                            {profile.extract && <p className="text-gray-100 text-xl leading-relaxed mb-3">{profile.extract}</p>}
+                          </>
+                        );
+                      }
+                      if (cachedSsdi) {
+                        return (
+                          <>
+                            <SsdiRecordBlock r={cachedSsdi} />
+                            <div className="p-2 bg-purple-900/10 border border-purple-800/20 rounded-xl mb-3">
+                              <p className="text-purple-300 text-sm">{COPY.drawerSavedFromSsdi}</p>
+                            </div>
+                          </>
+                        );
+                      }
+                      return (
+                        <div className="bg-gray-800/60 rounded-xl p-3 border border-purple-900/30 mb-3">
+                          <p className="text-white font-bold text-xl mb-1">{name}</p>
+                          {dob && <p className="text-gray-300 text-xl">{COPY.labelDob}: {dob}</p>}
+                          {deathYear && <p className="text-gray-300 text-xl">{COPY.labelDod}: {deathYear}</p>}
+                          {location && <p className="text-gray-300 text-xl">{COPY.labelLocation}: {location}</p>}
+                          {!dob && !deathYear && !location && <p className="text-gray-400 text-xl mt-1">{COPY.drawerNoInfoSaved}</p>}
+                          <p className="text-gray-500 text-sm mt-2">{COPY.drawerNoWikiSsdi}</p>
+                        </div>
+                      );
+                    })()}
+                  </>
+                )}
+                {!isMemory && (
+                  <>
+                    {noWikiInfo && (!ssdiResults || ssdiResults.length === 0) ? (
+                      <div className="text-center py-3 mb-3"><p className="text-gray-400 text-xl">{COPY.drawerNoRecords}</p></div>
+                    ) : noWikiInfo ? null : profile && (
+                      <>
+                        <div className={'px-4 py-3 rounded-xl mb-3 text-center ' + (profile.deathDate ? 'bg-gray-700' : profile.isDisambiguation ? 'bg-yellow-600' : 'bg-green-700')}>
+                          <p className="text-white font-black text-3xl">{profile.title || name}</p>
+                          <p className="text-white/80 text-xl">{profile.deathDate ? COPY.statusPassed : profile.isDisambiguation ? COPY.statusMultiple : COPY.statusAliveShort}</p>
+                        </div>
+                        {newlyDeceased && (
+                          <div className="p-3 bg-purple-900/60 border border-purple-600 rounded-xl mb-3">
+                            <p className="text-purple-200 text-xl text-center font-bold">{COPY.drawerNewlyDeceased}</p>
+                          </div>
+                        )}
+                        <div className="flex gap-3 items-start mb-3">
+                          {profile.thumbnail ? <img src={profile.thumbnail} alt={profile.title} className="w-16 h-16 rounded-full object-cover border-2 border-purple-600/50 shrink-0" /> : <div className="w-16 h-16 rounded-full bg-purple-900/40 flex items-center justify-center shrink-0 text-2xl">?</div>}
+                          <div className="flex-1">
+                            <h2 className="text-white text-2xl font-bold mb-1">{profile.title}</h2>
+                            {profile.birthDate && <p className="text-purple-300 text-xl font-bold">{COPY.labelDob}: {profile.birthDate}</p>}
+                            {profile.deathDate && profile.deathDate !== 'deceased' && <p className="text-gray-300 text-xl font-bold">{COPY.labelDod}: {profile.deathDate}</p>}
+                            {!profile.isDisambiguation && <p className="text-purple-400 text-xl italic mt-1">{profile.description}</p>}
+                          </div>
+                        </div>
+                        {!profile.isDisambiguation && profile.extract && <p className="text-gray-100 text-xl leading-relaxed mb-3">{profile.extract}</p>}
+                        {location && <p className="text-gray-300 text-xl mb-2">{COPY.labelLocation}: {location}</p>}
+                        {profile.isDisambiguation && <div className="p-3 bg-yellow-500/20 border border-yellow-400/30 rounded-xl mb-3"><p className="text-yellow-200 text-xl text-center">{COPY.statusMultipleHint}</p></div>}
+                      </>
+                    )}
+                    {(!profile || !profile.deathDate) && ssdiResults && ssdiResults.length > 0 && (
+                      <div className="mt-2 pt-3 border-t border-purple-900/30">
+                        <p className="text-purple-300 text-2xl font-bold mb-2">Possible matches in SSDI (thru 2014)</p>
+                        {ssdiResults.map((r, i) => {
+                          const rawScore = scoreResult(r, drawerFirst, drawerMI, drawerLast, '', '');
+                          const exactMatch = r.first_name && r.last_name && r.first_name.toUpperCase() === drawerFirst.toUpperCase() && r.last_name.toUpperCase() === drawerLast.toUpperCase();
+                          const score = (ssdiResults.length === 1 || exactMatch) ? 95 : rawScore;
+                          const conf = confidenceLabel(score);
+                          const confColor = conf === COPY.confidenceProbable ? 'text-green-400' : conf === COPY.confidencePotential ? 'text-yellow-400' : 'text-gray-400';
+                          return (
+                            <div key={i} onClick={() => { setDrawerData(null); setSsdiDrawer(r); }} className="mb-2 pb-2 border-b border-white/10 last:border-0 cursor-pointer hover:bg-white/5 rounded px-1 transition-colors">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-white text-2xl font-semibold underline decoration-dotted">{r.name}</p>
+                                  {r.middle_name && <p className="text-gray-400 text-sm">{COPY.labelMiddle}: {r.middle_name}</p>}
+                                </div>
+                                <span className={'text-base font-bold ml-2 shrink-0 ' + confColor}>{conf}</span>
+                              </div>
+                              {r.birth_date && <p className="text-gray-400 text-sm">{COPY.labelDob}: {r.birth_date}</p>}
+                              {r.death_date && <p className="text-gray-400 text-sm">{COPY.labelDod}: {r.death_date}</p>}
+                              {r.state && <p className="text-gray-400 text-sm">{COPY.labelState}: {r.state}</p>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {drawerData.watchlistId && APP_META.modules.memories && (() => {
+                      var alreadyIn = isOnWatchlist(name);
+                      if (alreadyIn === 'memories') return <p className="text-green-400 text-xl text-center font-bold mt-3">{COPY.memoriesAlreadyIn}</p>;
+                      if (alreadyIn === 'watchlist') return (
+                        <button onClick={async () => {
+                          const token = localStorage.getItem(APP_META.storageKeys.token);
+                          try {
+                            await fetch(API_BASE + '/watchlist', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ name: name, location: location || '', dob: '', is_deceased: true, death_year: null }) });
+                            await loadWatchlist(); setDrawerData(null); setPage('memories');
+                          } catch(e) { alert(COPY.format(COPY.errorGeneric, { msg: e.message })); }
+                        }} className="w-full py-3 bg-gray-700/60 border border-gray-500/40 text-gray-200 rounded-xl text-xl flex items-center justify-center gap-2 mt-3">
+                          <PlusIcon /> {COPY.actionSaveToMemories}
+                        </button>
+                      );
+                      return null;
+                    })()}
+                  </>
+                )}
+              </>
+            )}
+            <button onClick={() => setDrawerData(null)} className="w-full py-4 bg-purple-900/40 border border-purple-800/50 text-white rounded-xl text-xl mt-4">{COPY.actionClose}</button>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  if (page === 'login') {
+    return (
+      <div style={{ minHeight: '100dvh', width: '100%', backgroundColor: POSTER_STYLE.backgroundColor, backgroundImage: POSTER_STYLE.backgroundImage, backgroundSize: POSTER_STYLE.backgroundSize, backgroundPosition: POSTER_STYLE.backgroundPosition, backgroundRepeat: POSTER_STYLE.backgroundRepeat, backgroundAttachment: POSTER_STYLE.backgroundAttachment, display: 'flex', flexDirection: 'column', alignItems: 'stretch', paddingBottom: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 58vh' }}>
+          <img src={SKIN.assets.logo} alt={COPY.appName} onError={(e) => { e.target.style.display = 'none'; }} style={{ width: '88vw', height: '54vh', objectFit: 'contain', filter: 'brightness(2.0) drop-shadow(0 6px 24px rgba(124,58,237,0.8))' }} />
+        </div>
+        <div style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
+          <div className="bg-purple-950/80 backdrop-blur-sm rounded-2xl p-4 shadow-2xl border border-purple-600/40 space-y-3">
+            <input type="email" placeholder={COPY.loginEmailPH} value={email} onChange={(e) => setEmail(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && doAuth('login')} className="w-full px-4 py-3 rounded-xl bg-white/15 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 text-xl" />
+            <div className="relative">
+              <input type={showPassword ? 'text' : 'password'} placeholder={COPY.loginPasswordPH} value={password} onChange={(e) => setPassword(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && doAuth('login')} className="w-full px-4 py-3 rounded-xl bg-white/15 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 text-xl" />
+              <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60">{showPassword ? <EyeOffIcon /> : <EyeIcon />}</button>
+            </div>
+            {backendWaking && <p className="text-white/60 text-xl text-center animate-pulse">{COPY.loginBackendWake}</p>}
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => doAuth('login')} disabled={loading} className="py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl disabled:opacity-50 text-2xl">{loading ? '...' : COPY.loginBtnSignIn}</button>
+              <button onClick={() => doAuth('register')} disabled={loading} className="py-4 bg-purple-900/60 hover:bg-purple-800/80 text-white font-bold rounded-xl disabled:opacity-50 text-2xl border border-purple-400/60">{loading ? '...' : COPY.loginBtnRegister}</button>
+            </div>
+            <p className="text-white/40 text-xl text-center">{COPY.loginStayHint}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <PageWrapper bgStyle={page === 'watchlist' || page === 'memories' || page === 'notifications' ? WOOD_STYLE : POSTER_STYLE}>
+      <WikiDrawer />
+      <SsdiRecordDrawer />
+      <div className={containerClass}>
+
+        {page === 'watchlist' && APP_META.modules.watchlist && (
+          <div className="space-y-3" style={{ paddingTop: watchlist.filter(w => !w.is_deceased).length > 0 ? '1rem' : PT }}>
+            <div className={cardClass}>
+              <CardPageHeader title={COPY.watchlistHeader} subtitle={COPY.watchlistSubheader} />
+              {watchlist.filter(w => !w.is_deceased).length === 0 && (
+                <div className="py-6 text-center">
+                  <p className="text-gray-300 text-xl leading-relaxed mb-2">{COPY.watchlistEmpty}</p>
+                  <p className="text-purple-300 text-xl font-medium">{COPY.watchlistEmptyHint}</p>
+                </div>
+              )}
+            </div>
+            {watchlist.filter(w => !w.is_deceased).length > 0 && (
+              <div className={cardClass + ' mt-3'}>
+                <h2 className="text-3xl font-bold mb-1 text-white text-center">{COPY.watchlistCountLabel} ({watchlist.filter(w => !w.is_deceased).length})</h2>
+                <div className="space-y-2 mt-2">
+                  {watchlist.filter(w => !w.is_deceased).map(w => (
+                    <div key={w.id} className="p-4 rounded-lg border bg-gray-800/50 border-purple-900/20">
+                      {editingId === w.id ? (
+                        <div className="space-y-2">
+                          <ClearableInput value={editingName} onChange={(e) => setEditingName(e.target.value)} placeholder="Enter name" inputClass="w-full px-3 py-4 border border-purple-700 rounded-lg focus:ring-2 focus:ring-purple-500 text-2xl bg-gray-700 text-white placeholder-gray-400" />
+                          <div className="flex gap-2">
+                            <button onClick={async () => {
+                              await delWatch(w.id);
+                              const token = localStorage.getItem(APP_META.storageKeys.token);
+                              await fetch(API_BASE + '/watchlist', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ name: toTitleCase(editingName), location: w.location, dob: w.dob }) });
+                              await loadWatchlist(); setEditingId(null); setEditingName('');
+                            }} className="flex-1 py-4 bg-purple-600 text-white rounded-lg text-2xl font-bold">Save</button>
+                            <button onClick={() => { setEditingId(null); setEditingName(''); }} className="flex-1 py-4 bg-gray-600 text-gray-200 rounded-lg text-2xl">Cancel</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <button onClick={() => openWatchlistDrawer(w)} className="text-left w-full">
+                              <h3 className="font-semibold text-2xl text-white hover:text-purple-300 underline decoration-dotted truncate">{w.name}</h3>
+                            </button>
+                            {w.location && <p className="text-xl text-gray-400">{w.location}</p>}
+                            <div className="flex items-center gap-1 mt-1"><CheckIcon /><span className="text-xl text-green-400">{COPY.statusFollowing}</span></div>
+                          </div>
+                          <div className="flex gap-2 ml-2 shrink-0">
+                            <button onClick={() => { setEditingId(w.id); setEditingName(w.name); }} className="p-2 text-purple-400 hover:bg-purple-900/30 rounded-lg"><EditIcon /></button>
+                            <button onClick={() => delWatch(w.id)} className="p-2 text-purple-500 hover:bg-purple-900/30 rounded-lg"><TrashIcon /></button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {page === 'search' && (
+          <div className="space-y-3" style={{ paddingTop: PT }}>
+            <div className="flex flex-col items-center justify-center" style={{ height: PT, marginTop: '-' + PT, paddingTop: '0.5rem', paddingBottom: '0', pointerEvents: 'none' }}>
+              <img src={SKIN.assets.logo} alt={COPY.appName} onError={(e) => { e.target.style.display = 'none'; }} style={{ width: 'auto', height: 'calc(' + PT + ' - 2.5rem)', maxWidth: '95%', objectFit: 'contain', filter: 'drop-shadow(0 6px 24px rgba(124,58,237,0.9)) brightness(2.0)' }} />
+              <p className="text-purple-300 font-bold italic text-center" style={{ fontSize: isPhone ? '1.6rem' : '2.2rem', whiteSpace: 'nowrap', textShadow: '0 2px 8px rgba(0,0,0,0.8)', marginTop: '0.4rem' }}>{COPY.tagline}</p>
+              <p className="text-purple-200 text-center" style={{ fontSize: isPhone ? '1.0rem' : '1.2rem', textShadow: '0 1px 4px rgba(0,0,0,0.8)', marginTop: '0.2rem' }}>{COPY.taglineSub}</p>
+            </div>
+            <div className={cardClass} style={{ overflowY: 'auto', maxHeight: 'calc(100dvh - ' + PT + ' - 6rem)' }}>
+              <div className="mb-1 pb-1 border-b border-purple-900/30" />
+              {watchlistChecking && <p className="text-white text-center py-4 animate-pulse text-xl">{COPY.searchButtonSearching}</p>}
+              {!watchlistChecked ? (
+                <div className="space-y-2">
+                  <ClearableInput value={nw.name} onChange={(e) => {
+                    const val = e.target.value;
+                    const words = val.split(' ');
+                    const capped = words.map((w, i) => i < words.length - 1 ? toTitleCase(w) : w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                    setNw(Object.assign({}, nw, { name: capped }));
+                  }} onBlur={(e) => setNw(Object.assign({}, nw, { name: smartTitleCase(e.target.value.trim()) }))} onKeyPress={(e) => e.key === 'Enter' && checkWatch()} placeholder={COPY.searchPlaceholderName} inputClass={iClass} />
+                  <button id="mw-search-btn" onFocus={() => { setTimeout(() => { var el = document.getElementById('mw-search-btn'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350); }} onClick={checkWatch} disabled={watchlistChecking} className="w-full py-3 bg-purple-600 text-white rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 text-2xl font-bold">
+                    <SearchIcon /> {watchlistChecking ? COPY.searchButtonSearching : COPY.searchButton}
+                  </button>
+                  {!showMoreFields && (
+                    <button onClick={() => setShowMoreFields(true)} className="w-full py-2 bg-gray-800/60 border border-purple-900/30 text-purple-400 text-xl text-center rounded-lg">{COPY.searchMoreDetails}</button>
+                  )}
+                  {showMoreFields && (
+                    <>
+                      <ClearableInput value={nw.middle} onChange={(e) => { var v = e.target.value; if (v.length >= 1) v = v.charAt(0).toUpperCase() + v.slice(1); setNw(Object.assign({}, nw, { middle: v })); }} onBlur={(e) => { var v = e.target.value.trim(); setNw(Object.assign({}, nw, { middle: v.length === 1 ? v.toUpperCase() : v })); }} onKeyPress={(e) => e.key === 'Enter' && checkWatch()} placeholder={COPY.searchPlaceholderMiddle} inputClass={iClass} />
+                      <ClearableInput value={nw.suffix} onChange={(e) => setNw(Object.assign({}, nw, { suffix: e.target.value }))} onKeyPress={(e) => e.key === 'Enter' && checkWatch()} placeholder={COPY.searchPlaceholderSuffix} inputClass={iClass} />
+                      <ClearableInput value={nw.birthYear} onChange={(e) => setNw(Object.assign({}, nw, { birthYear: e.target.value.replace(/\D/g, '').slice(0, 4) }))} onKeyPress={(e) => e.key === 'Enter' && checkWatch()} placeholder={COPY.searchPlaceholderBirthYear} maxLength={4} inputClass={iClass} numeric={true} />
+                      <ClearableInput value={nw.location} onChange={(e) => { const val = e.target.value; const words = val.split(' '); const capped = words.map((w, i) => i < words.length - 1 ? toTitleCase(w) : w.charAt(0).toUpperCase() + w.slice(1)).join(' '); setNw(Object.assign({}, nw, { location: capped })); }} onKeyPress={(e) => e.key === 'Enter' && checkWatch()} placeholder={COPY.searchPlaceholderLocation} inputClass={iClass} />
+                    </>
+                  )}
+                  <p className="text-gray-400 text-sm text-center">{COPY.searchSourceCredit}</p>
+                </div>
+              ) : (
+                <WatchlistCheckCard />
+              )}
+            </div>
+          </div>
+        )}
+
+        {page === 'memories' && APP_META.modules.memories && (
+          <div className="space-y-3" style={{ paddingTop: "1rem" }}>
+            <div className={cardClass}>
+              <CardPageHeader title={COPY.memoriesHeader} subtitle={COPY.memoriesSubheader} />
+              {watchlist.filter(w => w.is_deceased).length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-gray-300 text-xl leading-relaxed">{COPY.memoriesEmpty}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-gray-400 text-lg text-center mb-1">{COPY.memoriesTapHint}</p>
+                  {watchlist.filter(w => w.is_deceased).map(w => {
+                    const confirmedDeceased = !!(w.death_year);
+                    const statusText = confirmedDeceased ? (COPY.statusPassed + ' -- ' + COPY.labelDod + ': ' + w.death_year) : COPY.statusSaved;
+                    return (
+                      <div key={w.id} className="p-4 bg-gray-900/70 rounded-lg border border-gray-600/50">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <button onClick={() => openWatchlistDrawer(w)} className="text-left w-full">
+                              <h3 className="font-semibold text-2xl text-white underline decoration-dotted truncate">{w.name}</h3>
+                            </button>
+                            <span className="text-xl text-gray-400 font-bold">{statusText}</span>
+                            {w.location && <p className="text-gray-500 text-lg">{w.location}</p>}
+                          </div>
+                          <button onClick={() => delWatch(w.id)} className="p-2 text-purple-500 hover:bg-purple-900/30 rounded-lg ml-2 shrink-0"><TrashIcon /></button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {page === 'notifications' && APP_META.modules.alerts && (
+          <div className="space-y-3" style={{ paddingTop: "1rem" }}>
+            <div className={cardClass}>
+              <CardPageHeader title={COPY.alertsHeader} subtitle={COPY.alertsSubheader} />
+              {notifications.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-white font-bold text-2xl">{COPY.alertsEmpty}</p>
+                  <p className="text-gray-200 text-xl mt-1">{COPY.alertsEmptyHint}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notifications.map(n => (
+                    <div key={n.id} className="p-3 bg-purple-950/50 border border-purple-800 rounded-xl">
+                      <h3 className="font-bold text-white text-xl mb-1">{n.name}</h3>
+                      <p className="text-gray-300 text-xl">{n.message}</p>
+                      <p className="text-gray-500 text-xl mt-1 mb-2">{new Date(n.created_at).toLocaleDateString()}</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => viewAlert(n)} className="flex-1 py-2 bg-purple-700/50 border border-purple-600/50 text-white rounded-lg text-xl font-bold">{COPY.actionView}</button>
+                        <button onClick={() => keepAlert(n.id, n.watchlist_id, n.name)} className="flex-1 py-2 bg-gray-700/50 border border-gray-600/50 text-gray-200 rounded-lg text-base font-bold">
+                          {COPY.actionKeep}<span className="block text-gray-400 text-xs font-normal leading-tight">{COPY.actionKeepSub}</span>
+                        </button>
+                        <button onClick={() => dismissAlert2(n.id, n.watchlist_id)} className="flex-1 py-2 bg-transparent border border-purple-900/50 text-purple-400 rounded-lg text-base">
+                          {COPY.actionDismiss}<span className="block text-purple-600 text-xs leading-tight">{COPY.actionDismissSub}</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {page === 'about' && (
+          <div className="space-y-4 pb-8" style={{ paddingTop: '1rem' }}>
+            <div className={cardClass}>
+              <div className="mb-3 pb-2 border-b border-purple-900/30 text-center">
+                <h2 className="text-4xl font-black text-white tracking-wide">{COPY.aboutHeader}</h2>
+                <h2 className="text-4xl font-black text-white tracking-wide">{COPY.appName}</h2>
+              </div>
+              <p className="text-purple-300 italic text-xl text-center mb-3">v{APP_META.version}</p>
+              <div className="flex items-center gap-4 mb-4">
+                <img src={SKIN.assets.founderPhoto} alt={COPY.founderName} className="w-14 h-14 rounded-full object-cover border-2 border-purple-600 shadow-lg shrink-0" />
+                <div>
+                  <p className="font-bold text-white text-xl">{COPY.founderName}</p>
+                  <p className="text-purple-400 italic text-xl">{COPY.founderTitle}</p>
+                  <a href={'mailto:' + COPY.founderEmail} className="text-purple-400 text-xl mt-1 block">{COPY.founderEmail}</a>
+                </div>
+              </div>
+              <p className="text-purple-200 text-2xl font-bold italic mb-3">{COPY.tagline}</p>
+              <div className="space-y-3 text-gray-200 text-xl leading-relaxed">
+                <p>{COPY.aboutStoryP1}</p>
+                <p>{COPY.aboutStoryP2}</p>
+                <p>{COPY.aboutStoryP3}</p>
+                <p>{COPY.aboutStoryP4}</p>
+              </div>
+            </div>
+            <div className={cardClass}>
+              <h3 className="text-white text-2xl font-bold mb-4 text-center">{COPY.aboutHowItWorksHeader}</h3>
+              <div className="space-y-4">
+                <div className="flex gap-3 items-start"><span className="text-purple-400 text-2xl font-black w-7 shrink-0">1.</span><p className="text-gray-300 text-xl">{COPY.aboutHowItWorks1}</p></div>
+                <div className="flex gap-3 items-start"><span className="text-purple-400 text-2xl font-black w-7 shrink-0">2.</span><p className="text-gray-300 text-xl">{COPY.aboutHowItWorks2}</p></div>
+                <div className="flex gap-3 items-start"><span className="text-purple-400 text-2xl font-black w-7 shrink-0">3.</span><p className="text-gray-300 text-xl">{COPY.aboutHowItWorks3}</p></div>
+                <div className="flex gap-3 items-start"><span className="text-purple-400 text-2xl font-black w-7 shrink-0">4.</span><p className="text-gray-300 text-xl">{COPY.aboutHowItWorks4}</p></div>
+              </div>
+            </div>
+            {APP_META.modules.alerts && <div className={cardClass}>
+              <h3 className="text-white text-2xl font-bold mb-3">{COPY.aboutAlertsHeader}</h3>
+              <div className="space-y-2 text-gray-200 text-xl leading-relaxed">
+                <p>{COPY.aboutAlertsBody}</p>
+                <p><strong className="text-white">{COPY.aboutAlertView}</strong></p>
+                <p><strong className="text-white">{COPY.aboutAlertKeep}</strong></p>
+                <p><strong className="text-white">{COPY.aboutAlertDismiss}</strong></p>
+              </div>
+            </div>}
+            <div className={cardClass}>
+              <h3 className="font-bold text-white mb-1 text-2xl">{COPY.privacyTitle}</h3>
+              <p className="text-gray-400 text-xl mb-3">{COPY.privacyLastUpdated}</p>
+              <div className="space-y-3 text-gray-200 text-xl leading-relaxed">
+                <p>{COPY.privacyCollect}</p>
+                <p>{COPY.privacyUse}</p>
+                <p>{COPY.privacySources}</p>
+                <p>{COPY.privacyRights}</p>
+                <p>{COPY.privacyMinor}</p>
+                <p>{COPY.privacyDisclaimer}</p>
+                <a href={'mailto:' + COPY.founderEmail} className="text-purple-400 text-xl">{COPY.founderEmail}</a>
+              </div>
+            </div>
+            <div className="px-1 space-y-3 pb-2">
+              <div className="p-3 bg-black/30 rounded-xl"><p className="font-medium text-gray-200 text-xl text-center">{user && user.email}</p></div>
+              <button onClick={doLogout} className="w-full py-4 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-2xl font-bold">{COPY.signOut}</button>
+              <button onClick={() => setShowDangerZone(!showDangerZone)} className="w-full py-3 text-gray-500 text-xl text-center">{showDangerZone ? COPY.accountRemovalHide : COPY.accountRemoval}</button>
+              {showDangerZone && (
+                <div className="space-y-3">
+                  {!showDeleteConfirm
+                    ? <button onClick={() => setShowDeleteConfirm(true)} className="w-full py-4 bg-gray-900/70 border border-purple-800 text-purple-400 rounded-xl text-xl">{COPY.deleteAccount}</button>
+                    : <div className="bg-purple-950/90 border border-purple-800 rounded-2xl p-5 space-y-3">
+                        <h3 className="font-bold text-purple-400 text-xl">{COPY.deleteConfirmHeader}</h3>
+                        <p className="text-purple-300 text-xl">{COPY.deleteConfirmBody}</p>
+                        <button onClick={doDeleteAccount} className="w-full py-4 bg-purple-700 text-white rounded-xl font-bold text-xl">{COPY.deleteConfirmBtn}</button>
+                        <button onClick={() => { setShowDeleteConfirm(false); setShowDangerZone(false); }} className="w-full py-4 bg-gray-800 border border-gray-600 text-gray-300 rounded-xl font-medium text-xl">{COPY.deleteConfirmCancel}</button>
+                      </div>
+                  }
+                </div>
+              )}
+            </div>
+            <p className="text-white/30 text-center text-sm pb-4">v{APP_META.version}</p>
+          </div>
+        )}
+
+      </div>
+
+      {APP_META.modules.navigation && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(5,0,15,0.95)', backdropFilter: 'blur(8px)', borderTop: '1px solid ' + SKIN.colors.primaryDeep, padding: '0.5rem 1rem', paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
+        <div className="flex justify-around max-w-sm mx-auto">
+          <button onClick={() => { clearWatchlistCheck(); setPage('search'); }} className={'flex flex-col items-center gap-0.5 px-1 py-1 ' + (page === 'search' ? 'text-purple-400' : 'text-gray-400')}>
+            <SearchIcon /><span className="text-xl font-medium">{COPY.navSearch}</span>
+          </button>
+          {APP_META.modules.watchlist && <button onClick={() => setPage('watchlist')} className={'flex flex-col items-center gap-0.5 px-1 py-1 ' + (page === 'watchlist' ? 'text-purple-400' : 'text-gray-400')}>
+            <HeartIcon /><span className="text-xl font-medium">{COPY.navWatchlist}</span>
+          </button>}
+          {APP_META.modules.memories && <button onClick={() => setPage('memories')} className={'flex flex-col items-center gap-0.5 px-1 py-1 ' + (page === 'memories' ? 'text-purple-400' : 'text-gray-400')}>
+            <MemoriesIcon />
+            <span className="text-xl font-medium">{COPY.navMemories}</span>
+          </button>}
+          <button onClick={() => setPage('about')} className={'flex flex-col items-center gap-0.5 px-1 py-1 ' + (page === 'about' ? 'text-purple-400' : 'text-gray-400')}>
+            <InfoIcon /><span className="text-xl font-medium">{COPY.navInfo}</span>
+          </button>
+          {APP_META.modules.alerts && <button onClick={() => setPage('notifications')} className={'flex flex-col items-center gap-0.5 px-1 py-1 relative ' + (page === 'notifications' ? 'text-purple-400' : 'text-gray-400')}>
+            <BellIcon red={unreadCount > 0} />
+            {unreadCount > 0 && <span className="absolute top-0 right-1 bg-purple-600 text-white text-xl font-bold rounded-full w-4 h-4 flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+            <span className="text-xl font-medium" style={unreadCount > 0 ? {color: SKIN.colors.primary} : {}}>{COPY.navAlerts}</span>
+          </button>}
+        </div>
+        <p className="text-center text-gray-600 text-xs mt-1" style={{display: page === 'search' ? 'none' : 'block'}}>app v{APP_META.version} | api v{apiVersion}</p>
+      </div>}
+    </PageWrapper>
+  );
+}
+
+ReactDOM.render(React.createElement(App), document.getElementById('root'));
+</script>
+</body>
+</html>
