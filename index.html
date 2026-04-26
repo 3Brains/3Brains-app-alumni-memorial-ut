@@ -167,7 +167,7 @@ const COPY = {
   appShortName: 'MW',
   tagline: 'Whatever happened to...',
   taglineSub: 'For Texas Exes',
-  metaDescription: 'Alumni Memorial Watch -  A dignified way to find out what happened to a fellow Longhorn.',
+  metaDescription: 'Alumni Memorial Watch -  A dignified way to find out whatever happened to a fellow Longhorn.',
   navSearch: 'Search',
   navWatchlist: 'Watchlist',
   navMemories: 'Memories',
@@ -1942,8 +1942,8 @@ function App() {
           <div className="space-y-3" style={{ paddingTop: PT }}>
             <div className="flex flex-col items-center justify-center" style={{ height: PT, marginTop: '-' + PT, paddingTop: '0.5rem', paddingBottom: '0', pointerEvents: 'none' }}>
               <img src={SKIN.assets.logo} alt={COPY.appName} onError={(e) => { e.target.style.display = 'none'; }} style={{ width: 'auto', height: 'calc(' + PT + ' - 2.5rem)', maxWidth: '95%', objectFit: 'contain', filter: 'none' }} />
-              <p className="text-orange-300 font-bold italic text-center" style={{ fontSize: isPhone ? '1.6rem' : '2.2rem', whiteSpace: 'nowrap', textShadow: '0 2px 8px rgba(0,0,0,0.8)', marginTop: '0.4rem' }}>{COPY.tagline}</p>
-              <p className="text-purple-200 text-center" style={{ fontSize: isPhone ? '1.0rem' : '1.2rem', textShadow: '0 1px 4px rgba(0,0,0,0.8)', marginTop: '0.2rem' }}>{COPY.taglineSub}</p>
+              <p className="text-orange-300 font-bold italic text-center" style={{ fontSize: isPhone ? '2.0rem' : '2.6rem', whiteSpace: 'nowrap', textShadow: 'none', marginTop: '0.4rem' }}>{COPY.tagline}</p>
+              <p className="text-orange-200 text-center" style={{ fontSize: isPhone ? '1.2rem' : '1.4rem', textShadow: 'none', marginTop: '0.2rem' }}>{COPY.taglineSub}</p>
             </div>
             <div className={cardClass} style={{ overflowY: 'auto', maxHeight: 'calc(100dvh - ' + PT + ' - 6rem)' }}>
               <div className="mb-1 pb-1 border-b border-orange-900/30" />
